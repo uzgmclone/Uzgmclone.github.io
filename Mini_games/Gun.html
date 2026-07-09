@@ -185,6 +185,7 @@
         else if (score.recoil < 42) gun = "AUG";
         else if (score.react < 250) gun = "UMP45";
         else if (score.react < 280) gun = "mp5k";
+        else if (score.recoil < 29 ) gun = "akm";
 
         document.getElementById('res-gun').innerText = "추천 총기: " + gun;
         document.getElementById('res-score').innerText = 
