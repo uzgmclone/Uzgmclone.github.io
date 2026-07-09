@@ -134,8 +134,8 @@
     enemies = [];
     const eImgs = ["🐣","🐤","🦜","🦆","🪿","🦃","🦢","🐦‍⬛","🦤","🐦","🦖","🦕"];
     for(let i=0; i<2; i++) {
-      let hp = 100+(stage*150);
-      enemies.push({ name:`Lv.${stage} 적`, img:eImgs[Math.min(stage-1,4)], hp:hp, curHp:hp, atk:15+(stage*8), side:'e', id:i });
+      let hp = 100+(stage*350);
+      enemies.push({ name:`Lv.${stage} 적`, img:eImgs[Math.min(stage-1,4)], hp:hp, curHp:hp, atk:15+(stage*28), side:'e', id:i });
     }
     renderSprites(); updateUI(); log(`--- STAGE ${stage} 시작 ---`); nextTurn();
   }
