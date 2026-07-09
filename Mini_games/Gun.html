@@ -186,7 +186,7 @@ if (score.recoil < 20 && score.react < 230) {
     gun = "Beryl M762"; 
     // 반동 제어 잘 되고 반응속도 빠르면 Beryl
 }
-else if (score.recoil < 40 && score.react < 250) {
+else if (score.recoil < 40 && score.react < 300) {
     gun = "AUG"; 
     // 안정성과 반응속도 모두 준수하면 AUG
 }
@@ -201,6 +201,9 @@ else if (score.move > 75 && score.react < 240) {
 else if (score.recoil < 19) {
     gun = "AKM"; 
     // 단발 데미지 우선, 반동 제어 가능하면 AKM
+}
+else if (score.move > 60) {
+    gun = "s1897";
 }
     
 
