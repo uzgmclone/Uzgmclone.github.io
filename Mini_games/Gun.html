@@ -182,7 +182,7 @@
         
         let gun = "M416";
         if (score.recoil < 32 && score.react < 240) gun = "Beryl M762";
-        else if (score.recoil < 42) gun = "AUG";
+        else if (score.recoil < 42 && score.recoil >30 ) gun = "AUG";
         else if (score.react < 250) gun = "UMP45";
         else if (score.react < 280) gun = "mp5k";
         else if (score.recoil < 29 ) gun = "akm";
