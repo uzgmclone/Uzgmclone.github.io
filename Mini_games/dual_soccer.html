@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>듀얼 축구</title>
+    <title>듀얼 에어축구</title>
     <style>
         body { margin: 0; background: #1e272e; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: sans-serif; touch-action: none; }
         canvas { background: #34495e; border: 10px solid #ecf0f1; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
@@ -39,7 +39,7 @@
     let s1 = 0, s2 = 0;
     let isGameOver = false;
 
-    let puck = { x: 160, y: 250, vx: 0, vy: 0, r: 15, color: '#f1c40f' };
+    let puck = { x: 160, y: 250, vx: 0, vy: 0, r: 15, color: '#D8DDE647' };
     let p1 = { x: 160, y: 450, r: 25, color: '#ff7675' }; 
     let p2 = { x: 160, y: 50, r: 25, color: '#74b9ff' };  
 
@@ -86,8 +86,8 @@
     }
 
     function checkWin() {
-        if (s1 >= 13) showWin("P1 WINNER! 🎉");
-        else if (s2 >= 13) showWin("P2 WINNER! 🏆");
+        if (s1 >= 3) showWin("P1 WINNER! 🎉");
+        else if (s2 >= 3) showWin("P2 WINNER! 🏆");
     }
 
     function showWin(msg) {
