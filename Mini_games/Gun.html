@@ -180,12 +180,29 @@
         btn.style.display = "none";
         resultBox.style.display = "block";
         
-        let gun = "M416";
-        if (score.recoil < 32 && score.react < 240) gun = "Beryl M762";
-        else if (score.recoil < 42 && score.recoil >30 ) gun = "AUG";
-        else if (score.react < 250) gun = "UMP45";
-        else if (score.react < 280) gun = "mp5k";
-        else if (score.recoil < 29 ) gun = "akm";
+        let gun = "M416"; // 기본값
+
+if (score.recoil < 30 && score.react < 230) {
+    gun = "Beryl M762"; 
+    // 반동 제어 잘 되고 반응속도 빠르면 Beryl
+}
+else if (score.recoil < 40 && score.react < 250) {
+    gun = "AUG"; 
+    // 안정성과 반응속도 모두 준수하면 AUG
+}
+else if (score.move > 85) {
+    gun = "UMP45"; 
+    // 리드샷 능력이 뛰어나면 UMP45
+}
+else if (score.move > 75 && score.react < 240) {
+    gun = "MP5K"; 
+    // 리드샷 + 빠른 반응속도 → MP5K
+}
+else if (score.recoil < 28) {
+    gun = "AKM"; 
+    // 단발 데미지 우선, 반동 제어 가능하면 AKM
+}
+
 
         document.getElementById('res-gun').innerText = "추천 총기: " + gun;
         document.getElementById('res-score').innerText = 
