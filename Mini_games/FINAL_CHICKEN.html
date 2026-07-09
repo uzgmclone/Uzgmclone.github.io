@@ -132,7 +132,7 @@
 
   function loadStage() {
     enemies = [];
-    const eImgs = ["🐔","🦆","🦃","🦢","🦖"];
+    const eImgs = ["🦜","🦆","🦃","🦢","🐦‍⬛","🦖"];
     for(let i=0; i<2; i++) {
       let hp = 100+(stage*70);
       enemies.push({ name:`Lv.${stage} 적`, img:eImgs[Math.min(stage-1,4)], hp:hp, curHp:hp, atk:15+(stage*8), side:'e', id:i });
