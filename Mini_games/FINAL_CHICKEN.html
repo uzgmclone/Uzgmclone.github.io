@@ -306,6 +306,7 @@
       target.curHp = Math.max(0, target.curHp - dmg);
       this.showPop(target, dmg, this.currentSkill.u ? "#ff0" : "#fff", this.currentSkill.u ? 50 : 30);
       this.log(`${attacker.name}의 ${this.currentSkill.n}! ${dmg} 피해!`);
+      this.finishTurn();
       
       this.currentSkill = null;
       document.querySelectorAll('.sprite').forEach(s => s.classList.remove('target-unit'));
@@ -368,6 +369,7 @@
       target.curHp = Math.max(0, target.curHp - dmg);
       this.showPop(target, dmg, "#f55", 30);
       this.log(`${unit.name}의 ${skill.n}! ${dmg} 피해!`);
+      this.updateUI();
       
       this.finishTurn();
     },
