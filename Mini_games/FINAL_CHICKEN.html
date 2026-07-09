@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>🐥 FINAL CHICKENS "tantrum" - FIXED</title>
+  <title>🐥 FINAL CHICKENS "tantrum"</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@700&display=swap');
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -109,9 +109,17 @@
         {n:"바람",p:1,m:0}, {n:"침 주기",p:2.2,m:30}, {n:"눈 터트리기",p:2.0,m:28}, 
         {n:"필살: 태풍",p:4.0,m:50}, {n:"필살: 최면",p:5.0,m:75}, {n:"궁극: 지혜의빛",p:8.5,m:130,u:true}
     ]},
-    { name:"알에서 나와 세상을 너무일찍 마주한 아기 병아리", img:"🐣", hp:50, mp:140, atk:65, skills:[
+    { name:"알에서 나와 세상을 너무 일찍 마주한 아기 병아리", img:"🐣", hp:50, mp:140, atk:65, skills:[
         {n:"껍질 던지기",p:1,m:0}, {n:"껍질 주기",p:2.2,m:30}, {n:"눈 터트리기",p:2.0,m:28}, 
         {n:"필살: 괴성 발사",p:4.0,m:50}, {n:"필살: 아기계",p:5.0,m:75}, {n:"궁극: 쫑알쫑알",p:12.5,m:130,u:true}
+    ]}
+    { name:"너무나도 몸이 튼튼해서 조류전쟁때 최전방 탱커를 맡아서 몸이 더 강화된 티라노사우루스 와이라노상방뇨", img:"🦖", hp:750, mp:100, atk:5, skills:[
+        {n:"박치기",p:1,m:0}, {n:"소리지르기",p:2.2,m:30}, {n:"밟기",p:2.0,m:28}, 
+        {n:"필살: 돌진",p:4.0,m:50}, {n:"필살: 꼬리치기",p:5.0,m:75}, {n:"궁극: 난장판 만들기",p:40.5,m:100,u:true}
+    ]}
+  { name:"너무나도 몸이 뜨거워서 알도 너무나도 뜨거워 주변을 다 태워버릴 정도로 너무나도 뜨거워서 자신의 깃털마저 불에 내성이 생겨버려서 너무나도 강력해진 불사조 앗뜨거 ", img:"🐦‍🔥", hp:170, mp:200, atk:25, skills:[
+        {n:"불 뿌리기",p:1.5,m:0}, {n:"화참격",p:2.2,m:75}, {n:"밟기",p:2.0,m:110}, 
+        {n:"필살: 주변을 다 태워버리기",p:3.0,m:130}, {n:"필살: 너무나도 뜨거운 알 던지기",p:5.0,m:155}, {n:"궁극:  불 태우기",p:10.5,m:200,u:true}
     ]}
   ];
 
@@ -126,12 +134,12 @@
     stage: 1,
     curPage: 0,
     currentSkill: null,
-    currentAttacker: null,  // ✅ 현재 공격자 저장 (버그 수정)
+    currentAttacker: null,
     potionCount: 3,
     
     // ===== UI 업데이트 =====
     updateUI() {
-      // ✅ 버그 수정: p${i+1}-status로 정확하게 ID 지정
+      
       this.myParty.forEach((m, i) => {
         const statusEl = document.getElementById(`p${i+1}-status`);
         if(statusEl) {
@@ -152,10 +160,10 @@
         document.getElementById(`e-${i}`).style.opacity = m.curHp <= 0 ? '0' : '1';
       });
       
-      // ✅ 포션 카운트 업데이트
+      
       document.getElementById('pot-count').innerText = this.potionCount;
       
-      // ✅ 포션 버튼 활성화/비활성화 (버그 수정)
+      
       const useBtn = document.getElementById('use-pot-btn');
       if(this.currentAttacker) {
         if(this.currentAttacker.side === 'p' && this.potionCount > 0) {
@@ -172,7 +180,7 @@
     nextTurn() {
       if(this.checkEnd()) return;
       
-      // ✅ 버그 수정: 살아있는 유닛만 필터링
+      
       const allUnits = [...this.myParty, ...this.enemies];
       const aliveUnits = allUnits.filter(u => u.curHp > 0);
       
@@ -181,7 +189,7 @@
         return;
       }
       
-      // ✅ 버그 수정: 현재 공격자 저장
+     
       this.currentAttacker = aliveUnits[this.turnIdx % aliveUnits.length];
       
       // UI 업데이트
@@ -210,7 +218,7 @@
       this.curPage = 0;
       list.style.transform = 'translateX(0)';
       
-      // ✅ 스킬을 4개씩 페이지로 나눔
+      
       for(let i = 0; i < unit.skills.length; i += 4) {
         const page = document.createElement('div');
         page.className = 'menu-page';
@@ -241,7 +249,7 @@
     
     // ===== 공격 =====
     attackTarget(target) {
-      const attacker = this.currentAttacker;  // ✅ 버그 수정: 저장된 공격자 사용
+      const attacker = this.currentAttacker; 
       
       if(!attacker || !this.currentSkill) return;
       
@@ -283,7 +291,7 @@
         return;
       }
       
-      const unit = this.currentAttacker;  // ✅ 버그 수정: 현재 공격자
+      const unit = this.currentAttacker;  // 
       
       if(unit.side !== 'p') {
         this.log("플레이어 턴에만 사용 가능!");
@@ -373,7 +381,7 @@
         this.potionCount++;
         document.getElementById('pot-count').innerText = this.potionCount;
         
-        // ✅ 버그 수정: 상태 초기화
+        
         this.myParty.forEach(p => {
           p.hp += 40;
           p.atk += 6;
