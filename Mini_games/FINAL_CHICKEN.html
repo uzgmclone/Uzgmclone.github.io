@@ -489,7 +489,10 @@
         s.id = `e-${i}`;
         s.innerText = m.img;
         s.onclick = () => {
-          if(this.currentSkill && m.curHp > 0) {
+         if(!this.currentAttacker) return;  // 공격자 없음
+      if(this.currentAttacker.side !== 'p') return;  // 플레이어 턴 아님
+      if(!this.currentSkill) return;  // 스킬 미선택
+      if(m.curHp <= 0) return;  // 이미 쓰러짐
             this.attackTarget(m);
           }
         };
