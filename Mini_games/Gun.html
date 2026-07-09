@@ -138,7 +138,7 @@
 
     function prepReact() {
         stage = 2;
-        status.innerText = "2단계: 초록색 변할 때 클릭!";
+        status.innerText = "2단계: 반응 속도 테스트 (초록색 변할 때 클릭!)";
         btn.innerText = "대기...";
         btn.disabled = true;
         btn.style.background = "#333";
@@ -183,7 +183,8 @@
         let gun = "M416";
         if (score.recoil < 32 && score.react < 240) gun = "Beryl M762";
         else if (score.recoil < 42) gun = "AUG";
-        else if (score.react < 270) gun = "UMP45";
+        else if (score.react < 250) gun = "UMP45";
+        else if (score.react < 280) gun = "mp5k";
 
         document.getElementById('res-gun').innerText = "추천 총기: " + gun;
         document.getElementById('res-score').innerText = 
