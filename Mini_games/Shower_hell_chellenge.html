@@ -81,14 +81,14 @@
 
   <div class="game-container">
     <h1 id="title">🚿 샤워 온도 서바이벌</h1>
-    <p>적정 온도를 유지하지 못하면 죽음뿐이개!</p>
+    <p>적정 온도를 유지하지 못하면 수육이거나 냉동참치뿐!</p>
     
     <div class="gauge-container">
       <div class="target-zone"></div>
       <div id="pointer" class="pointer" style="left: 50%;"></div>
     </div>
 
-    <div id="status">현재 온도는 아주 적당하개...</div>
+    <div id="status">현재 온도는 아주 적당함부르크</div>
     
     <div class="btn-group">
       <button class="btn btn-hot" onmousedown="adjust(5)">🔥 뜨거운 물!</button>
@@ -103,7 +103,7 @@
   <div id="gameOverScreen">
     <h1 id="failReason" style="font-size: 3rem;">💀 GAME OVER 💀</h1>
     <p id="finalScore" style="font-size: 1.5rem;"></p>
-    <button class="btn btn-retry" onclick="location.reload()">다시 샤워하러 가기 🧼</button>
+    <button class="btn btn-retry" onclick="location.reload()">다시 목숨 걸고 샤워하러 가기 🧼</button>
   </div>
 
   <script>
@@ -120,7 +120,7 @@
       if(isGameOver) return;
 
       // 온도가 매 초 랜덤하게 -2 ~ +2 사이로 요동침 (점점 심해짐)
-      let wobble = (Math.random() - 0.5) * (6 + time/10); 
+      let wobble = (Math.random() - 0.5) * (10 + time/10); 
       temp += wobble;
 
       // 화면 업데이트
@@ -133,7 +133,7 @@
 
       // 게임 오버 체크 (0% 또는 100% 도달 시)
       if(temp <= 0 || temp >= 100) {
-        endGame(temp <= 0 ? "🥶 꽁꽁 얼어버렸개!" : "🔥 통구이가 되었개!");
+        endGame(temp <= 0 ? "🥶 사인:냉동참치" : "🔥 사인:돼지수육");
       }
 
       requestAnimationFrame(gameLoop);
