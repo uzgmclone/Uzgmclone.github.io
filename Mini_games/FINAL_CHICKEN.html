@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>🐥 FINAL CHICKENS "tantrum" </title>
+  <title>🐥 FINAL CHICKENS "tantrum" - FIXED</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@700&display=swap');
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -38,9 +38,9 @@
     .nav-btn { position: absolute; z-index: 20; background: rgba(0,0,139,0.9); color: white; border: 1px solid #fff; padding: 12px 6px; cursor: pointer; }
     #log-window { flex: 1; font-size: 11px; overflow-y: auto; background: rgba(0,0,50,0.5); }
     
-    button.skill-btn { background: rgba(255,255,255,0.1); color: white; border: 1px solid #444; font-size: 11px; cursor: pointer; }
+    button.skill-btn { background: rgba(255,255,255,0.1); color: white; border: 1px solid #444; font-size: 11px; cursor: pointer; padding: 5px; }
     button.ult-btn { border-color: #ff0; color: #ff0; }
-    button:disabled { opacity: 0.3; }
+    button:disabled { opacity: 0.3; cursor: not-allowed; }
 
     .damage-pop { position: absolute; font-weight: bold; text-shadow: 2px 2px #000; animation: floatUp 0.8s forwards; z-index: 100; pointer-events: none; }
     @keyframes floatUp { from{opacity:1; transform:translateY(0);} to{opacity:0; transform:translateY(-60px);} }
@@ -71,13 +71,13 @@
     </div>
     <div class="ff-box" style="display:flex; justify-content:space-between; font-size:12px; align-items:center;">
       <span>🎒 물약: <b id="pot-count">3</b>개</span>
-      <button class="ff-box" id="use-pot-btn" style="color:white; cursor:pointer;" onclick="usePotion()">물약 사용(HP+150)</button>
+      <button class="ff-box" id="use-pot-btn" style="color:white; cursor:pointer;" onclick="gameState.usePotion()">물약 사용(HP+150)</button>
     </div>
     <div id="command-bar">
       <div id="menu-container" class="ff-box">
-        <button class="nav-btn" style="left:0" onclick="movePage(-1)">◀</button>
+        <button class="nav-btn" style="left:0" onclick="gameState.movePage(-1)">◀</button>
         <div id="menu-list"></div>
-        <button class="nav-btn" style="right:0" onclick="movePage(1)">▶</button>
+        <button class="nav-btn" style="right:0" onclick="gameState.movePage(1)">▶</button>
       </div>
       <div id="log-window" class="ff-box"></div>
     </div>
@@ -85,7 +85,9 @@
 </div>
 
 <script>
+  // ============================================
   // 캐릭터 데이터 정의
+  // ============================================
   const charDB = [
     { name:"기사 병아리", img:"🐥", hp:250, mp:100, atk:30, skills:[
         {n:"평타",p:1,m:0}, {n:"방패찍기",p:1.4,m:15}, {n:"박치기",p:1.5,m:20}, 
@@ -107,165 +109,377 @@
         {n:"바람",p:1,m:0}, {n:"침 주기",p:2.2,m:30}, {n:"눈 터트리기",p:2.0,m:28}, 
         {n:"필살: 태풍",p:4.0,m:50}, {n:"필살: 최면",p:5.0,m:75}, {n:"궁극: 지혜의빛",p:8.5,m:130,u:true}
     ]},
-    { name:"알에서 나와 세상을 너무일찍 마주하여 세상이 뭔지 뼈저리게 느껴버린 아기 병아리 베킨치", img:"🐣", hp:50, mp:140, atk:65, skills:[
+    { name:"알에서 나와 세상을 너무일찍 마주한 아기 병아리", img:"🐣", hp:50, mp:140, atk:65, skills:[
         {n:"껍질 던지기",p:1,m:0}, {n:"껍질 주기",p:2.2,m:30}, {n:"눈 터트리기",p:2.0,m:28}, 
         {n:"필살: 괴성 발사",p:4.0,m:50}, {n:"필살: 아기계",p:5.0,m:75}, {n:"궁극: 쫑알쫑알",p:12.5,m:130,u:true}
     ]}
   ];
 
-  let myParty=[], enemies=[], selectedIds=[], turnIdx=0, stage=1, curPage=0, currentSkill=null, potionCount=3;
+  // ============================================
+  // 게임 상태 객체 (전역 상태 관리)
+  // ============================================
+  const gameState = {
+    myParty: [],
+    enemies: [],
+    selectedIds: [],
+    turnIdx: 0,
+    stage: 1,
+    curPage: 0,
+    currentSkill: null,
+    currentAttacker: null,  // ✅ 현재 공격자 저장 (버그 수정)
+    potionCount: 3,
+    
+    // ===== UI 업데이트 =====
+    updateUI() {
+      // ✅ 버그 수정: p${i+1}-status로 정확하게 ID 지정
+      this.myParty.forEach((m, i) => {
+        const statusEl = document.getElementById(`p${i+1}-status`);
+        if(statusEl) {
+          const hP = (m.curHp / m.hp) * 100;
+          const mP = (m.curMp / m.mp) * 100;
+          statusEl.innerHTML = `
+            <b>${m.name}</b><br>
+            HP:${m.curHp}/${m.hp}
+            <div class="bar-bg"><div class="hp-fill" style="width:${hP}%"></div></div>
+            MP:${m.curMp}/${m.mp}
+            <div class="bar-bg"><div class="mp-fill" style="width:${mP}%"></div></div>
+          `;
+        }
+        document.getElementById(`p-${i}`).style.opacity = m.curHp <= 0 ? '0.2' : '1';
+      });
+      
+      this.enemies.forEach((m, i) => {
+        document.getElementById(`e-${i}`).style.opacity = m.curHp <= 0 ? '0' : '1';
+      });
+      
+      // ✅ 포션 카운트 업데이트
+      document.getElementById('pot-count').innerText = this.potionCount;
+      
+      // ✅ 포션 버튼 활성화/비활성화 (버그 수정)
+      const useBtn = document.getElementById('use-pot-btn');
+      if(this.currentAttacker) {
+        if(this.currentAttacker.side === 'p' && this.potionCount > 0) {
+          useBtn.disabled = false;
+          useBtn.style.opacity = '1';
+        } else {
+          useBtn.disabled = true;
+          useBtn.style.opacity = '0.3';
+        }
+      }
+    },
+    
+    // ===== 턴 시스템 =====
+    nextTurn() {
+      if(this.checkEnd()) return;
+      
+      // ✅ 버그 수정: 살아있는 유닛만 필터링
+      const allUnits = [...this.myParty, ...this.enemies];
+      const aliveUnits = allUnits.filter(u => u.curHp > 0);
+      
+      if(aliveUnits.length === 0) {
+        this.log("모든 유닛이 사라졌습니다!");
+        return;
+      }
+      
+      // ✅ 버그 수정: 현재 공격자 저장
+      this.currentAttacker = aliveUnits[this.turnIdx % aliveUnits.length];
+      
+      // UI 업데이트
+      document.querySelectorAll('.sprite').forEach(s => s.classList.remove('active-unit'));
+      const sId = this.currentAttacker.side === 'p' 
+        ? `p-${this.myParty.indexOf(this.currentAttacker)}` 
+        : `e-${this.enemies.indexOf(this.currentAttacker)}`;
+      
+      const sprite = document.getElementById(sId);
+      if(sprite) sprite.classList.add('active-unit');
+      
+      // 턴 실행
+      if(this.currentAttacker.side === 'e') {
+        setTimeout(() => this.enemyAI(this.currentAttacker), 1000);
+      } else {
+        this.currentAttacker.curMp = Math.min(this.currentAttacker.mp, this.currentAttacker.curMp + 10);
+        this.updateUI();
+        this.showSkillPages(this.currentAttacker);
+      }
+    },
+    
+    // ===== 스킬 선택 =====
+    showSkillPages(unit) {
+      const list = document.getElementById('menu-list');
+      list.innerHTML = '';
+      this.curPage = 0;
+      list.style.transform = 'translateX(0)';
+      
+      // ✅ 스킬을 4개씩 페이지로 나눔
+      for(let i = 0; i < unit.skills.length; i += 4) {
+        const page = document.createElement('div');
+        page.className = 'menu-page';
+        
+        unit.skills.slice(i, i + 4).forEach(s => {
+          const btn = document.createElement('button');
+          btn.className = `skill-btn ff-box ${s.u ? 'ult-btn' : ''}`;
+          btn.innerHTML = `${s.n}<br><small>MP:${s.m}</small>`;
+          btn.disabled = unit.curMp < s.m;
+          btn.onclick = () => this.selectSkill(s, unit);
+          page.appendChild(btn);
+        });
+        
+        list.appendChild(page);
+      }
+    },
+    
+    selectSkill(s, unit) {
+      this.currentSkill = s;
+      this.log(`대상을 선택! [${s.n}]`);
+      document.querySelectorAll('#enemy-party .sprite').forEach(el => {
+        const idx = parseInt(el.id.split('-')[1]);
+        if(this.enemies[idx].curHp > 0) {
+          el.classList.add('target-unit');
+        }
+      });
+    },
+    
+    // ===== 공격 =====
+    attackTarget(target) {
+      const attacker = this.currentAttacker;  // ✅ 버그 수정: 저장된 공격자 사용
+      
+      if(!attacker || !this.currentSkill) return;
+      
+      attacker.curMp -= this.currentSkill.m;
+      
+      // 데미지 계산
+      const DMG_VAR_MIN = 0.9;
+      const DMG_VAR_MAX = 1.2;
+      let dmg = Math.floor(attacker.atk * this.currentSkill.p * (DMG_VAR_MIN + Math.random() * (DMG_VAR_MAX - DMG_VAR_MIN)));
+      
+      // 공격 애니메이션
+      const sId = `p-${this.myParty.indexOf(attacker)}`;
+      const battleField = document.getElementById('battle-field');
+      const sprite = document.getElementById(sId);
+      
+      if(sprite) sprite.classList.add('shake');
+      if(battleField) battleField.classList.add('shake');
+      
+      setTimeout(() => {
+        document.querySelectorAll('.shake').forEach(el => el.classList.remove('shake'));
+      }, 200);
+      
+      // 데미지 적용
+      target.curHp = Math.max(0, target.curHp - dmg);
+      this.showPop(target, dmg, this.currentSkill.u ? "#ff0" : "#fff", this.currentSkill.u ? 50 : 30);
+      this.log(`${attacker.name}의 ${this.currentSkill.n}! ${dmg} 피해!`);
+      
+      // 초기화
+      this.currentSkill = null;
+      document.querySelectorAll('.sprite').forEach(s => s.classList.remove('target-unit'));
+      
+      this.finishTurn();
+    },
+    
+    // ===== 포션 사용 =====
+    usePotion() {
+      if(this.potionCount <= 0) {
+        this.log("포션이 부족해!");
+        return;
+      }
+      
+      const unit = this.currentAttacker;  // ✅ 버그 수정: 현재 공격자
+      
+      if(unit.side !== 'p') {
+        this.log("플레이어 턴에만 사용 가능!");
+        return;
+      }
+      
+      this.potionCount--;
+      unit.curHp = Math.min(unit.hp, unit.curHp + 150);
+      this.log(`포션 사용! ${unit.name} HP +150 회복!`);
+      this.showPop(unit, 150, "#0f0", 35);
+      this.updateUI();
+      
+      this.finishTurn();
+    },
+    
+    // ===== 적 AI =====
+    enemyAI(unit) {
+      const targets = this.myParty.filter(p => p.curHp > 0);
+      if(targets.length === 0) {
+        this.finishTurn();
+        return;
+      }
+      
+      const target = targets[Math.floor(Math.random() * targets.length)];
+      let dmg = Math.floor(unit.atk * (0.8 + Math.random() * 0.4));
+      target.curHp = Math.max(0, target.curHp - dmg);
+      
+      this.showPop(target, dmg, "#f55", 30);
+      this.log(`${unit.name}의 반격! ${dmg} 피해!`);
+      
+      this.finishTurn();
+    },
+    
+    // ===== 턴 종료 =====
+    finishTurn() {
+      this.turnIdx++;
+      this.updateUI();
+      setTimeout(() => this.nextTurn(), 700);
+    },
+    
+    // ===== 팝업 효과 =====
+    showPop(u, v, c, s) {
+      const id = u.side === 'p' ? `p-${this.myParty.indexOf(u)}` : `e-${this.enemies.indexOf(u)}`;
+      const sprite = document.getElementById(id);
+      if(!sprite) return;
+      
+      const r = sprite.getBoundingClientRect();
+      const p = document.createElement('div');
+      p.className = 'damage-pop';
+      p.innerText = v;
+      p.style.color = c;
+      p.style.fontSize = s + 'px';
+      p.style.left = r.left + 'px';
+      p.style.top = r.top + 'px';
+      
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 800);
+    },
+    
+    // ===== 페이지 이동 =====
+    movePage(d) {
+      const list = document.getElementById('menu-list');
+      const total = list.children.length;
+      this.curPage = (this.curPage + d + total) % total;
+      list.style.transform = `translateX(-${this.curPage * 100}%)`;
+    },
+    
+    // ===== 로그 =====
+    log(m) {
+      const win = document.getElementById('log-window');
+      win.innerHTML += `> ${m}<br>`;
+      win.scrollTop = win.scrollHeight;
+    },
+    
+    // ===== 게임 끝 확인 =====
+    checkEnd() {
+      if(this.myParty.every(p => p.curHp <= 0)) {
+        alert("모두 손질되었음... 게임 오버!");
+        location.reload();
+        return true;
+      }
+      
+      if(this.enemies.every(e => e.curHp <= 0)) {
+        this.stage++;
+        alert(`클리어! STAGE ${this.stage}로 진행합니다.`);
+        
+        this.potionCount++;
+        document.getElementById('pot-count').innerText = this.potionCount;
+        
+        // ✅ 버그 수정: 상태 초기화
+        this.myParty.forEach(p => {
+          p.hp += 40;
+          p.atk += 6;
+          p.curHp = p.hp;
+          p.curMp = p.mp;
+        });
+        
+        this.turnIdx = 0;
+        this.currentSkill = null;
+        this.currentAttacker = null;
+        
+        this.loadStage();
+        return true;
+      }
+      
+      return false;
+    },
+    
+    // ===== 스테이지 로드 =====
+    loadStage() {
+      this.enemies = [];
+      const eImgs = ["🐣", "🐤", "🦜", "🦆", "🪿", "🦃", "🦢", "🐦‍⬛", "🦤", "🐦", "🦖", "🦕"];
+      
+      for(let i = 0; i < 2; i++) {
+        let hp = 70 + (this.stage * 350);
+        this.enemies.push({
+          name: `Lv.${this.stage} 적`,
+          img: eImgs[Math.min(this.stage - 1, eImgs.length - 1)],
+          hp: hp,
+          curHp: hp,
+          atk: 10 + (this.stage * 18),
+          side: 'e',
+          id: i
+        });
+      }
+      
+      this.renderSprites();
+      this.updateUI();
+      this.log(`--- STAGE ${this.stage} 시작 ---`);
+      this.nextTurn();
+    },
+    
+    // ===== 스프라이트 렌더 =====
+    renderSprites() {
+      const pBox = document.getElementById('player-party');
+      const eBox = document.getElementById('enemy-party');
+      pBox.innerHTML = '';
+      eBox.innerHTML = '';
+      
+      this.myParty.forEach((m, i) => {
+        const s = document.createElement('div');
+        s.className = 'sprite player-side';
+        s.id = `p-${i}`;
+        s.innerText = m.img;
+        pBox.appendChild(s);
+      });
+      
+      this.enemies.forEach((m, i) => {
+        const s = document.createElement('div');
+        s.className = 'sprite';
+        s.id = `e-${i}`;
+        s.innerText = m.img;
+        s.onclick = () => {
+          if(this.currentSkill && m.curHp > 0) {
+            this.attackTarget(m);
+          }
+        };
+        eBox.appendChild(s);
+      });
+    }
+  };
 
-  // 1. 캐릭터 선택창 초기화
+  // ============================================
+  // 초기화
+  // ============================================
   const listEl = document.getElementById('char-list');
   charDB.forEach((c, i) => {
-    const d = document.createElement('div'); d.className = 'char-item ff-box';
+    const d = document.createElement('div');
+    d.className = 'char-item ff-box';
     d.innerHTML = `<b>${c.img} ${c.name}</b><br>HP:${c.hp} MP:${c.mp} ATK:${c.atk}`;
     d.onclick = () => {
-      if(selectedIds.includes(i)) { selectedIds=selectedIds.filter(v=>v!==i); d.classList.remove('selected'); }
-      else if(selectedIds.length<2) { selectedIds.push(i); d.classList.add('selected'); }
-      document.getElementById('start-btn').style.display = selectedIds.length===2?'block':'none';
+      if(gameState.selectedIds.includes(i)) {
+        gameState.selectedIds = gameState.selectedIds.filter(v => v !== i);
+        d.classList.remove('selected');
+      } else if(gameState.selectedIds.length < 2) {
+        gameState.selectedIds.push(i);
+        d.classList.add('selected');
+      }
+      document.getElementById('start-btn').style.display = gameState.selectedIds.length === 2 ? 'block' : 'none';
     };
     listEl.appendChild(d);
   });
 
+  // ============================================
+  // 게임 시작
+  // ============================================
   function startBattle() {
-    myParty = selectedIds.map(id => ({...charDB[id], curHp:charDB[id].hp, curMp:charDB[id].mp, side:'p'}));
+    gameState.myParty = gameState.selectedIds.map(id => ({
+      ...charDB[id],
+      curHp: charDB[id].hp,
+      curMp: charDB[id].mp,
+      side: 'p'
+    }));
+    
     document.getElementById('select-screen').style.display = 'none';
-    loadStage();
-  }
-
-  function loadStage() {
-    enemies = [];
-    const eImgs = ["🐣","🐤","🦜","🦆","🪿","🦃","🦢","🐦‍⬛","🦤","🐦","🦖","🦕"];
-    for(let i=0; i<2; i++) {
-      let hp = 70+(stage*350);
-      enemies.push({ name:`Lv.${stage} 적`, img:eImgs[Math.min(stage-1,4)], hp:hp, curHp:hp, atk:10+(stage*18), side:'e', id:i });
-    }
-    renderSprites(); updateUI(); log(`--- STAGE ${stage} 시작 ---`); nextTurn();
-  }
-
-  function renderSprites() {
-    const pBox=document.getElementById('player-party'), eBox=document.getElementById('enemy-party');
-    pBox.innerHTML=''; eBox.innerHTML='';
-    myParty.forEach((m,i)=>{
-      const s=document.createElement('div'); s.className='sprite player-side'; s.id=`p-${i}`; s.innerText=m.img;
-      pBox.appendChild(s);
-    });
-    enemies.forEach((m,i)=>{
-      const s=document.createElement('div'); s.className='sprite'; s.id=`e-${i}`; s.innerText=m.img;
-      s.onclick=()=>{ if(currentSkill) attackTarget(m); };
-      eBox.appendChild(s);
-    });
-  }
-
-  function nextTurn() {
-    if(checkEnd()) return;
-    const units=[...myParty, ...enemies];
-    const unit=units[turnIdx % units.length];
-    document.querySelectorAll('.sprite').forEach(s=>s.classList.remove('active-unit'));
-    if(unit.curHp<=0) { turnIdx++; nextTurn(); return; }
-
-    const sId = unit.side==='p'?`p-${myParty.indexOf(unit)}`:`e-${enemies.indexOf(unit)}`;
-    document.getElementById(sId).classList.add('active-unit');
-
-    if(unit.side==='e') setTimeout(()=>enemyAI(unit), 1000);
-    else { unit.curMp=Math.min(unit.mp, unit.curMp+10); updateUI(); showSkillPages(unit); }
-  }
-
-  function showSkillPages(unit) {
-    const list=document.getElementById('menu-list'); list.innerHTML=''; curPage=0; list.style.transform='translateX(0)';
-    // 6개의 스킬을 4개씩 나눠서 2페이지로 구성
-    for(let i=0; i<unit.skills.length; i+=4) {
-      const page=document.createElement('div'); page.className='menu-page';
-      unit.skills.slice(i, i+4).forEach(s=>{
-        const btn=document.createElement('button'); 
-        btn.className=`skill-btn ff-box ${s.u?'ult-btn':''}`;
-        btn.innerHTML=`${s.n}<br><small>MP:${s.m}</small>`;
-        btn.disabled=unit.curMp<s.m; btn.onclick=()=>selectSkill(s, unit);
-        page.appendChild(btn);
-      });
-      list.appendChild(page);
-    }
-    document.getElementById('use-pot-btn').disabled = false;
-  }
-
-  function selectSkill(s, unit) {
-    currentSkill=s; log(`대상을 선택! [${s.n}]`); 
-    document.querySelectorAll('#enemy-party .sprite').forEach(el=>{ if(enemies[el.id.split('-')[1]].curHp>0) el.classList.add('target-unit'); });
-  }
-
-  function attackTarget(target) {
-    const attacker = [...myParty, ...enemies][turnIdx % (myParty.length+enemies.length)];
-    attacker.curMp -= currentSkill.m;
-    
-    let dmg = Math.floor(attacker.atk * currentSkill.p * (0.9+Math.random()*0.3));
-    
-    // 공격 애니메이션
-    const sId = `p-${myParty.indexOf(attacker)}`;
-    document.getElementById(sId).classList.add('shake');
-    document.getElementById('battle-field').classList.add('shake');
-    setTimeout(()=> { document.querySelectorAll('.shake').forEach(el=>el.classList.remove('shake')); }, 200);
-
-    target.curHp=Math.max(0, target.curHp-dmg);
-    showPop(target, dmg, currentSkill.u?"#ff0":"#fff", currentSkill.u?50:30);
-    log(`${attacker.name}의 ${currentSkill.n}! ${dmg} 피해!`);
-    
-    currentSkill=null; document.querySelectorAll('.sprite').forEach(s=>s.classList.remove('target-unit'));
-    finishTurn();
-  }
-
-  function usePotion() {
-    const unit = myParty[turnIdx % (myParty.length+enemies.length)];
-    if(potionCount > 0 && unit.side === 'p') {
-      potionCount--; unit.curHp = Math.min(unit.hp, unit.curHp + 150);
-      document.getElementById('pot-count').innerText = potionCount;
-      log(`포션 사용! ${unit.name} HP 150 회복!`);
-      showPop(unit, 150, "#0f0", 35); updateUI();
-      document.getElementById('use-pot-btn').disabled = true;
-    }
-  }
-
-  function enemyAI(unit) {
-    const targets=myParty.filter(p=>p.curHp>0); const target=targets[Math.floor(Math.random()*targets.length)];
-    let dmg=Math.floor(unit.atk*(0.8+Math.random()*0.4));
-    target.curHp=Math.max(0, target.curHp-dmg); showPop(target, dmg, "#f55", 30);
-    log(`${unit.name}의 반격! ${dmg} 피해!`); finishTurn();
-  }
-
-  function finishTurn() { turnIdx++; updateUI(); setTimeout(nextTurn, 700); }
-
-  function updateUI() {
-    myParty.forEach((m,i)=>{
-      const hP=(m.curHp/m.hp)*100, mP=(m.curMp/m.mp)*100;
-      document.getElementById(`p${i+1}-status`).innerHTML=`<b>${m.name}</b><br>HP:${m.curHp}/${m.hp}<div class="bar-bg"><div class="hp-fill" style="width:${hP}%"></div></div>MP:${m.curMp}/${m.mp}<div class="bar-bg"><div class="mp-fill" style="width:${mP}%"></div></div>`;
-      document.getElementById(`p-${i}`).style.opacity=m.curHp<=0?'0.2':'1';
-    });
-    enemies.forEach((m,i)=>{ document.getElementById(`e-${i}`).style.opacity=m.curHp<=0?'0':'1'; });
-  }
-
-  function showPop(u,v,c,s) {
-    const id=u.side==='p'?`p-${myParty.indexOf(u)}`:`e-${enemies.indexOf(u)}`;
-    const r=document.getElementById(id).getBoundingClientRect();
-    const p=document.createElement('div'); p.className='damage-pop'; p.innerText=v; p.style.color=c; p.style.fontSize=s+'px';
-    p.style.left=r.left+'px'; p.style.top=r.top+'px'; document.body.appendChild(p);
-    setTimeout(()=>p.remove(), 800);
-  }
-
-  function movePage(d) {
-    const list=document.getElementById('menu-list'); const total=list.children.length;
-    curPage=(curPage+d+total)%total; list.style.transform=`translateX(-${curPage*100}%)`;
-  }
-
-  function log(m) { const win=document.getElementById('log-window'); win.innerHTML+=`> ${m}<br>`; win.scrollTop=win.scrollHeight; }
-
-  function checkEnd() {
-    if(myParty.every(p=>p.curHp<=0)) { alert("모두 손질되었음..."); location.reload(); return true; }
-    if(enemies.every(e=>e.curHp<=0)) { 
-      stage++; alert("클리어::마성의 물약 보급"); potionCount++; document.getElementById('pot-count').innerText = potionCount;
-      myParty.forEach(p=>{ p.hp+=40; p.atk+=6; p.curHp=p.hp; p.curMp=p.mp; });
-      turnIdx=0; loadStage(); return true; 
-    }
-    return false;
+    gameState.loadStage();
   }
 </script>
 </body>
