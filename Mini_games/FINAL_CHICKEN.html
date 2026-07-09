@@ -132,9 +132,9 @@
 
   function loadStage() {
     enemies = [];
-    const eImgs = ["🦜","🦆","🦃","🦢","🐦‍⬛","🦖"];
+    const eImgs = ["🐣","🐤","🦜","🦆","🪿","🦃","🦢","🐦‍⬛","🦤","🐦","🦖","🦕"];
     for(let i=0; i<2; i++) {
-      let hp = 100+(stage*70);
+      let hp = 100+(stage*150);
       enemies.push({ name:`Lv.${stage} 적`, img:eImgs[Math.min(stage-1,4)], hp:hp, curHp:hp, atk:15+(stage*8), side:'e', id:i });
     }
     renderSprites(); updateUI(); log(`--- STAGE ${stage} 시작 ---`); nextTurn();
@@ -255,9 +255,9 @@
   function log(m) { const win=document.getElementById('log-window'); win.innerHTML+=`> ${m}<br>`; win.scrollTop=win.scrollHeight; }
 
   function checkEnd() {
-    if(myParty.every(p=>p.curHp<=0)) { alert("전멸..."); location.reload(); return true; }
+    if(myParty.every(p=>p.curHp<=0)) { alert("모두 손질되었음..."); location.reload(); return true; }
     if(enemies.every(e=>e.curHp<=0)) { 
-      stage++; alert("스테이지 클리어! 물약 보급!"); potionCount++; document.getElementById('pot-count').innerText = potionCount;
+      stage++; alert("클리어::마성의 물약 보급"); potionCount++; document.getElementById('pot-count').innerText = potionCount;
       myParty.forEach(p=>{ p.hp+=40; p.atk+=6; p.curHp=p.hp; p.curMp=p.mp; });
       turnIdx=0; loadStage(); return true; 
     }
