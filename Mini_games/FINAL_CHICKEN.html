@@ -266,19 +266,19 @@
       const attacker = this.currentAttacker;
       
       if(!attacker) {
-        this.log("❌ 공격자가 없습니다!");
+        this.log("❌ 손질을 시도할 유닛이 없습니다!");
         return;
       }
       if(!this.currentSkill) {
-        this.log("❌ 스킬을 선택하세요!");
+        this.log("❌ 스킬을 선택");
         return;
       }
       if(!target) {
-        this.log("❌ 대상이 없습니다!");
+        this.log("❌ 대상이 없음!");
         return;
       }
       if(target.curHp <= 0) {
-        this.log("❌ 이미 쓰러진 대상입니다!");
+        this.log("❌ 이미 손질된 대상입니다!");
         return;
       }
       
