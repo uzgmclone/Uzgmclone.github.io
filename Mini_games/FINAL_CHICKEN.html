@@ -369,22 +369,22 @@
     // ===== 게임 끝 확인 =====
     checkEnd() {
       if(this.myParty.every(p => p.curHp <= 0)) {
-        alert("모두 손질되었음... 게임 오버!");
+        alert("모두 손질되었음...");
         location.reload();
         return true;
       }
       
       if(this.enemies.every(e => e.curHp <= 0)) {
         this.stage++;
-        alert(`클리어! STAGE ${this.stage}로 진행합니다.`);
+        alert(`상대 손질 끝! STAGE ${this.stage}로 돌진!!!`);
         
         this.potionCount++;
         document.getElementById('pot-count').innerText = this.potionCount;
         
         
         this.myParty.forEach(p => {
-          p.hp += 40;
-          p.atk += 6;
+          p.hp += 20;
+          p.atk += 10;
           p.curHp = p.hp;
           p.curMp = p.mp;
         });
