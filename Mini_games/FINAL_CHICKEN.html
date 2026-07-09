@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>🐥 FINAL CHICKENS "tantrum"</title>
+  <title>🐥 FINAL CHICKENS "tantrum" - IMPROVED</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@700&display=swap');
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -11,7 +11,6 @@
     .ff-box { background: linear-gradient(to bottom, #00008b, #000033); border: 2px solid #eee; border-radius: 5px; padding: 8px; }
     #game-container { display: flex; flex-direction: column; height: 100vh; width: 100vw; }
 
-    /* 전장 */
     #battle-field { height: 40vh; position: relative; background: linear-gradient(#1a2a6c, #000); display: flex; align-items: flex-end; justify-content: space-around; padding-bottom: 20px; border-bottom: 3px solid #fff; }
     .shake { animation: shakeAnim 0.2s; }
     @keyframes shakeAnim { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(5px,5px); } 50% { transform: translate(-5px,-5px); } 75% { transform: translate(5px,-5px); } }
@@ -22,7 +21,6 @@
     .target-unit { filter: drop-shadow(0 0 15px #ff4444); animation: blink 0.4s infinite; }
     @keyframes blink { 50% { opacity: 0.4; } }
 
-    /* UI 영역 */
     #ui-area { height: 60vh; background: #000; display: flex; flex-direction: column; padding: 5px; gap: 5px; }
     #status-bar { display: flex; gap: 5px; height: 100px; }
     .status-window { flex: 1; font-size: 11px; }
@@ -86,6 +84,24 @@
 
 <script>
   // ============================================
+  // 게임 설정
+  // ============================================
+  const CONFIG = {
+    BASE_DAMAGE_VAR_MIN: 0.9,
+    BASE_DAMAGE_VAR_MAX: 1.2,
+    ENEMY_DAMAGE_VAR_MIN: 0.8,
+    ENEMY_DAMAGE_VAR_MAX: 1.2,
+    POTION_HEAL: 150,
+    STAGE_HP_MULTIPLIER: 350,
+    STAGE_ATK_MULTIPLIER: 18,
+    PLAYER_HP_INCREASE: 40,
+    PLAYER_MP_INCREASE: 20,
+    PLAYER_ATK_INCREASE: 15,
+    POTION_COUNT_INITIAL: 3,
+    MP_REGEN_PER_TURN: 10
+  };
+
+  // ============================================
   // 캐릭터 데이터 정의
   // ============================================
   const charDB = [
@@ -113,26 +129,26 @@
         {n:"껍질 던지기",p:1,m:0}, {n:"껍질 주기",p:2.2,m:30}, {n:"눈 터트리기",p:2.0,m:28}, 
         {n:"필살: 괴성 발사",p:4.0,m:50}, {n:"필살: 아기계",p:5.0,m:75}, {n:"궁극: 쫑알쫑알",p:12.5,m:130,u:true}
     ]},
-    { name:"너무나도 몸이 튼튼해서 조류전쟁때 최전방 탱커를 맡아서 몸이 더 강화된 티라노사우루스 와이라노상방뇨", img:"🦖", hp:750, mp:100, atk:5, skills:[
+    { name:"티라노사우루스 와이라노상방뇨", img:"🦖", hp:750, mp:100, atk:50, skills:[
         {n:"박치기",p:1,m:0}, {n:"소리지르기",p:2.2,m:30}, {n:"밟기",p:2.0,m:28}, 
         {n:"필살: 돌진",p:4.0,m:50}, {n:"필살: 꼬리치기",p:5.0,m:75}, {n:"궁극: 난장판 만들기",p:40.5,m:100,u:true}
     ]},
-   { name:"너무나도 몸이 뜨거워서 알도 너무나도 뜨거워 주변을 다 태워버릴 정도로 너무나도 뜨거워서 자신의 깃털마저 불에 내성이 생겨버려서 너무나도 강력해진 불사조 앗뜨거 ", img:"🐦‍🔥", hp:170, mp:200, atk:25, skills:[
+    { name:"불사조 앗뜨거", img:"🐦‍🔥", hp:170, mp:200, atk:40, skills:[
         {n:"불 뿌리기",p:1.5,m:0}, {n:"화참격",p:2.2,m:75}, {n:"밟기",p:2.0,m:110}, 
-        {n:"필살: 주변을 다 태워버리기",p:3.0,m:130}, {n:"필살: 너무나도 뜨거운 알 던지기",p:5.0,m:155}, {n:"궁극:  불 태우기",p:10.5,m:200,u:true}
+        {n:"필살: 주변을 다 태워버리기",p:3.0,m:130}, {n:"필살: 너무나도 뜨거운 알 던지기",p:5.0,m:155}, {n:"궁극: 불 태우기",p:10.5,m:200,u:true}
     ]},
-   { name:"암살자 까뫄구이", img:"🐦‍⬛", hp:150, mp:300, atk:22, skills:[
+    { name:"암살자 까뫄구이", img:"🐦‍⬛", hp:150, mp:300, atk:35, skills:[
         {n:"암살",p:1.5,m:0}, {n:"회피기동후 반격",p:5.2,m:75}, {n:"야비하게 깃털날리기",p:2.0,m:110}, 
-        {n:"필살: 지원요청",p:3.0,m:130}, {n:"필살: 괴성",p:5.0,m:155}, {n:"궁극:  변장 후 습격",p:15.5,m:200,u:true}
+        {n:"필살: 지원요청",p:3.0,m:130}, {n:"필살: 괴성",p:5.0,m:155}, {n:"궁극: 변장 후 습격",p:15.5,m:200,u:true}
     ]},
-     { name:"도사:비행하는 스파르닭", img:"🐓", hp:150, mp:200, atk:19, skills:[
+    { name:"도사: 비행하는 스파르닭", img:"🐓", hp:150, mp:200, atk:38, skills:[
         {n:"발톱 할퀴기",p:1.5,m:0}, {n:"회피기동후 반격",p:5.2,m:75}, {n:"마구마구 부리 쪼기",p:2.0,m:110}, 
-        {n:"궁극: 날아올라 폭격",p:8.7,m:150}, {n:"궁극:  날개펴고 무지성 돌격",p:15.5,m:200,u:true}
+        {n:"필살: 날아올라 폭격",p:8.7,m:150}, {n:"궁극: 날개펴고 무지성 돌격",p:15.5,m:200,u:true}
     ]}
   ];
 
   // ============================================
-  // 게임 상태 객체 (전역 상태 관리)
+  // 게임 상태 객체
   // ============================================
   const gameState = {
     myParty: [],
@@ -143,11 +159,9 @@
     curPage: 0,
     currentSkill: null,
     currentAttacker: null,
-    potionCount: 3,
+    potionCount: CONFIG.POTION_COUNT_INITIAL,
     
-    // ===== UI 업데이트 =====
     updateUI() {
-      
       this.myParty.forEach((m, i) => {
         const statusEl = document.getElementById(`p${i+1}-status`);
         if(statusEl) {
@@ -161,16 +175,16 @@
             <div class="bar-bg"><div class="mp-fill" style="width:${mP}%"></div></div>
           `;
         }
-        document.getElementById(`p-${i}`).style.opacity = m.curHp <= 0 ? '0.2' : '1';
+        const spriteEl = document.getElementById(`p-${i}`);
+        if(spriteEl) spriteEl.style.opacity = m.curHp <= 0 ? '0.2' : '1';
       });
       
       this.enemies.forEach((m, i) => {
-        document.getElementById(`e-${i}`).style.opacity = m.curHp <= 0 ? '0' : '1';
+        const spriteEl = document.getElementById(`e-${i}`);
+        if(spriteEl) spriteEl.style.opacity = m.curHp <= 0 ? '0' : '1';
       });
       
-      
       document.getElementById('pot-count').innerText = this.potionCount;
-      
       
       const useBtn = document.getElementById('use-pot-btn');
       if(this.currentAttacker) {
@@ -184,10 +198,8 @@
       }
     },
     
-    // ===== 턴 시스템 =====
     nextTurn() {
       if(this.checkEnd()) return;
-      
       
       const allUnits = [...this.myParty, ...this.enemies];
       const aliveUnits = allUnits.filter(u => u.curHp > 0);
@@ -197,10 +209,8 @@
         return;
       }
       
-     
       this.currentAttacker = aliveUnits[this.turnIdx % aliveUnits.length];
       
-      // UI 업데이트
       document.querySelectorAll('.sprite').forEach(s => s.classList.remove('active-unit'));
       const sId = this.currentAttacker.side === 'p' 
         ? `p-${this.myParty.indexOf(this.currentAttacker)}` 
@@ -209,23 +219,20 @@
       const sprite = document.getElementById(sId);
       if(sprite) sprite.classList.add('active-unit');
       
-      // 턴 실행
       if(this.currentAttacker.side === 'e') {
         setTimeout(() => this.enemyAI(this.currentAttacker), 1000);
       } else {
-        this.currentAttacker.curMp = Math.min(this.currentAttacker.mp, this.currentAttacker.curMp + 10);
+        this.currentAttacker.curMp = Math.min(this.currentAttacker.mp, this.currentAttacker.curMp + CONFIG.MP_REGEN_PER_TURN);
         this.updateUI();
         this.showSkillPages(this.currentAttacker);
       }
     },
     
-    // ===== 스킬 선택 =====
     showSkillPages(unit) {
       const list = document.getElementById('menu-list');
       list.innerHTML = '';
       this.curPage = 0;
       list.style.transform = 'translateX(0)';
-      
       
       for(let i = 0; i < unit.skills.length; i += 4) {
         const page = document.createElement('div');
@@ -249,27 +256,43 @@
       this.log(`대상을 선택! [${s.n}]`);
       document.querySelectorAll('#enemy-party .sprite').forEach(el => {
         const idx = parseInt(el.id.split('-')[1]);
-        if(this.enemies[idx].curHp > 0) {
+        if(this.enemies[idx] && this.enemies[idx].curHp > 0) {
           el.classList.add('target-unit');
         }
       });
     },
     
-    // ===== 공격 =====
     attackTarget(target) {
-      const attacker = this.currentAttacker; 
+      const attacker = this.currentAttacker;
       
-      if(!attacker || !this.currentSkill) return;
+      if(!attacker) {
+        this.log("❌ 공격자가 없습니다!");
+        return;
+      }
+      if(!this.currentSkill) {
+        this.log("❌ 스킬을 선택하세요!");
+        return;
+      }
+      if(!target) {
+        this.log("❌ 대상이 없습니다!");
+        return;
+      }
+      if(target.curHp <= 0) {
+        this.log("❌ 이미 쓰러진 대상입니다!");
+        return;
+      }
       
       attacker.curMp -= this.currentSkill.m;
       
-      // 데미지 계산
-      const DMG_VAR_MIN = 0.9;
-      const DMG_VAR_MAX = 1.2;
+      const DMG_VAR_MIN = CONFIG.BASE_DAMAGE_VAR_MIN;
+      const DMG_VAR_MAX = CONFIG.BASE_DAMAGE_VAR_MAX;
       let dmg = Math.floor(attacker.atk * this.currentSkill.p * (DMG_VAR_MIN + Math.random() * (DMG_VAR_MAX - DMG_VAR_MIN)));
       
-      // 공격 애니메이션
-      const sId = `p-${this.myParty.indexOf(attacker)}`;
+      
+      const sId = attacker.side === 'p' 
+        ? `p-${this.myParty.indexOf(attacker)}`
+        : `e-${this.enemies.indexOf(attacker)}`;
+      
       const battleField = document.getElementById('battle-field');
       const sprite = document.getElementById(sId);
       
@@ -280,42 +303,43 @@
         document.querySelectorAll('.shake').forEach(el => el.classList.remove('shake'));
       }, 200);
       
-      // 데미지 적용
       target.curHp = Math.max(0, target.curHp - dmg);
       this.showPop(target, dmg, this.currentSkill.u ? "#ff0" : "#fff", this.currentSkill.u ? 50 : 30);
       this.log(`${attacker.name}의 ${this.currentSkill.n}! ${dmg} 피해!`);
       
-      // 초기화
       this.currentSkill = null;
       document.querySelectorAll('.sprite').forEach(s => s.classList.remove('target-unit'));
       
       this.finishTurn();
     },
     
-    // ===== 포션 사용 =====
     usePotion() {
       if(this.potionCount <= 0) {
         this.log("포션이 부족해!");
         return;
       }
       
-      const unit = this.currentAttacker;  // 
+      const unit = this.currentAttacker;
       
+      if(!unit) {
+        this.log("현재 유닛이 없습니다!");
+        return;
+      }
       if(unit.side !== 'p') {
         this.log("플레이어 턴에만 사용 가능!");
         return;
       }
       
       this.potionCount--;
-      unit.curHp = Math.min(unit.hp, unit.curHp + 150);
-      this.log(`포션 사용! ${unit.name} HP +150 회복!`);
-      this.showPop(unit, 150, "#0f0", 35);
+      unit.curHp = Math.min(unit.hp, unit.curHp + CONFIG.POTION_HEAL);
+      this.log(`포션 사용! ${unit.name} HP +${CONFIG.POTION_HEAL} 회복!`);
+      this.showPop(unit, CONFIG.POTION_HEAL, "#0f0", 35);
       this.updateUI();
       
       this.finishTurn();
     },
     
-    // ===== 적 AI =====
+    
     enemyAI(unit) {
       const targets = this.myParty.filter(p => p.curHp > 0);
       if(targets.length === 0) {
@@ -324,23 +348,36 @@
       }
       
       const target = targets[Math.floor(Math.random() * targets.length)];
-      let dmg = Math.floor(unit.atk * (0.8 + Math.random() * 0.4));
-      target.curHp = Math.max(0, target.curHp - dmg);
       
+     
+      let skill = unit.skills[0];
+      
+      if(unit.curMp >= 100 && Math.random() > 0.8) {
+        skill = unit.skills[unit.skills.length - 1];  // 궁극기
+      } else if(unit.curMp >= 60 && Math.random() > 0.6) {
+        skill = unit.skills[Math.floor(unit.skills.length / 2)];
+      }
+      
+      unit.curMp = Math.max(0, unit.curMp - skill.m);
+      
+      
+      const DMG_VAR_MIN = CONFIG.ENEMY_DAMAGE_VAR_MIN;
+      const DMG_VAR_MAX = CONFIG.ENEMY_DAMAGE_VAR_MAX;
+      let dmg = Math.floor(unit.atk * skill.p * (DMG_VAR_MIN + Math.random() * (DMG_VAR_MAX - DMG_VAR_MIN)));
+      
+      target.curHp = Math.max(0, target.curHp - dmg);
       this.showPop(target, dmg, "#f55", 30);
-      this.log(`${unit.name}의 반격! ${dmg} 피해!`);
+      this.log(`${unit.name}의 ${skill.n}! ${dmg} 피해!`);
       
       this.finishTurn();
     },
     
-    // ===== 턴 종료 =====
     finishTurn() {
       this.turnIdx++;
       this.updateUI();
       setTimeout(() => this.nextTurn(), 700);
     },
     
-    // ===== 팝업 효과 =====
     showPop(u, v, c, s) {
       const id = u.side === 'p' ? `p-${this.myParty.indexOf(u)}` : `e-${this.enemies.indexOf(u)}`;
       const sprite = document.getElementById(id);
@@ -359,22 +396,20 @@
       setTimeout(() => p.remove(), 800);
     },
     
-    // ===== 페이지 이동 =====
     movePage(d) {
       const list = document.getElementById('menu-list');
       const total = list.children.length;
+      if(total === 0) return;
       this.curPage = (this.curPage + d + total) % total;
       list.style.transform = `translateX(-${this.curPage * 100}%)`;
     },
     
-    // ===== 로그 =====
     log(m) {
       const win = document.getElementById('log-window');
       win.innerHTML += `> ${m}<br>`;
       win.scrollTop = win.scrollHeight;
     },
     
-    // ===== 게임 끝 확인 =====
     checkEnd() {
       if(this.myParty.every(p => p.curHp <= 0)) {
         alert("모두 손질되었음...");
@@ -391,8 +426,9 @@
         
         
         this.myParty.forEach(p => {
-          p.hp += 20;
-          p.atk += 10;
+          p.hp += CONFIG.PLAYER_HP_INCREASE;
+          p.mp += CONFIG.PLAYER_MP_INCREASE;
+          p.atk += CONFIG.PLAYER_ATK_INCREASE;
           p.curHp = p.hp;
           p.curMp = p.mp;
         });
@@ -408,19 +444,18 @@
       return false;
     },
     
-    // ===== 스테이지 로드 =====
     loadStage() {
       this.enemies = [];
       const eImgs = ["🐣", "🐤", "🦜", "🦆", "🪿", "🦃", "🦢", "🐦‍⬛", "🦤", "🐦", "🦖", "🦕"];
       
       for(let i = 0; i < 2; i++) {
-        let hp = 70 + (this.stage * 350);
+        let hp = 70 + (this.stage * CONFIG.STAGE_HP_MULTIPLIER);
         this.enemies.push({
           name: `Lv.${this.stage} 적`,
           img: eImgs[Math.min(this.stage - 1, eImgs.length - 1)],
           hp: hp,
           curHp: hp,
-          atk: 10 + (this.stage * 18),
+          atk: 10 + (this.stage * CONFIG.STAGE_ATK_MULTIPLIER),
           side: 'e',
           id: i
         });
@@ -432,7 +467,6 @@
       this.nextTurn();
     },
     
-    // ===== 스프라이트 렌더 =====
     renderSprites() {
       const pBox = document.getElementById('player-party');
       const eBox = document.getElementById('enemy-party');
@@ -483,9 +517,6 @@
     listEl.appendChild(d);
   });
 
-  // ============================================
-  // 게임 시작
-  // ============================================
   function startBattle() {
     gameState.myParty = gameState.selectedIds.map(id => ({
       ...charDB[id],
