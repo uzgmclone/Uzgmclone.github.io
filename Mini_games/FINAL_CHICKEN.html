@@ -93,7 +93,7 @@
   // 캐릭터 데이터 정의            {n:"박치기",p:1.7,m:23},
   const charDB = [
     { name:"기사 병아리 쫑아르쫑아르", img:"🐥", hp:250, mp:100, atk:30, skills:[
-        {n:"평범한 공격",p:1,m:0,mpHeal:10,healAll:20}, {n:"전방에 괴성발사",p:1.4,m:15}, {n:"박치기",p:1.5,m:20}, {n:"방패 치기",p:2.7,m:33},{n:"발차기",p:1.9,m:27},{n:"발차고 주먹때리기",p:1.8,m:16},
+        {n:"평범한 공격",p:1,m:0,mpHeal:10,healAll:20,allAttack:true}, {n:"전방에 괴성발사",p:1.4,m:15}, {n:"박치기",p:1.5,m:20}, {n:"방패 치기",p:2.7,m:33},{n:"발차기",p:1.9,m:27},{n:"발차고 주먹때리기",p:1.8,m:16},
         {n:"필살: 대참격",p:3.0,m:40}, {n:"필살: 근육폭발",p:3.5,m:50}, {n:"궁극: 친구 바아르 부르기",p:7.0,m:95,u:true},{n:"궁극: 방패로 기절시키고 때리기",p:9.8,m:100,heal:10,u:true}
     ]},
     { name:"마법사 펭귄 아마펭르르", img:"🐧", hp:110, mp:150, atk:55, skills:[
@@ -284,6 +284,29 @@
     });
 
     log("아군 전체 회복!");
+}
+
+    if(currentSkill.allAttack){
+
+    enemies.forEach(enemy=>{
+
+        if(enemy.curHp>0){
+
+            let dmg=Math.floor(
+                attacker.atk*
+                currentSkill.p*
+                (0.9+Math.random()*0.3)
+            );
+
+            enemy.curHp=Math.max(0,enemy.curHp-dmg);
+
+            showPop(enemy,dmg,"#fff",30);
+
+        }
+
+    });
+
+    log("전체 공격!");
 }
 
 //currentSkill = null;
