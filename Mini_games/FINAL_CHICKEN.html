@@ -90,7 +90,7 @@
 </div>
 
 <script>
-  // 캐릭터 데이터 정의::가능한 속성들:p:int,m:int,mpHeal:int,heal:int,healAll:int,allAttack:true u:true       기술예시 {n:"박치기",p:1.7,m:23},
+  // 캐릭터 데이터 정의::가능한 속성들:p:int,m:int,mpHeal:int,heal:int,healAll:int,allAttack:true,atkUp:int,hpUp:int,u:true       기술예시 {n:"박치기",p:1.7,m:23},
   const charDB = [
     { name:"기사 병아리 쫑아르쫑아르", img:"🐥", hp:250, mp:100, atk:30, skills:[
         {n:"평범한 공격",p:1,m:0}, {n:"전방에 괴성발사",p:1.4,m:15,mpHeal:50}, {n:"박치기",p:1.5,m:20}, {n:"방패 치기",p:2.7,m:33},{n:"발차기",p:1.9,m:27},{n:"발차고 주먹때리기",p:1.8,m:16},
@@ -307,6 +307,18 @@
     });
 
     log("전체 공격!");
+}
+    // 공격력 증가
+if(currentSkill.atkUp){
+    attacker.atk += currentSkill.atkUp;
+    log(`${attacker.name} 공격력 +${currentSkill.atkUp}!`);
+}
+
+// 최대 HP 증가
+if(currentSkill.hpUp){
+    attacker.hp += currentSkill.hpUp;
+    attacker.curHp += currentSkill.hpUp;
+    log(`${attacker.name} 최대 HP +${currentSkill.hpUp}!`);
 }
 
 //currentSkill = null;
