@@ -99,7 +99,7 @@
         let fall = setInterval(() => {
             if (!isLive) { clearInterval(fall); return; }
             let top = parseInt(obs.style.top);
-            obs.style.top = (top + 20) + 'px'; // 장애물 속도도 살짝 업!
+            obs.style.top = (top + 70) + 'px'; // 장애물 속도도 살짝 업!
 
             let pRect = player.getBoundingClientRect();
             let oRect = obs.getBoundingClientRect();
