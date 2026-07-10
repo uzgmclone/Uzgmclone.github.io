@@ -198,20 +198,35 @@
   }
 
   function showSkillPages(unit) {
-    const list=document.getElementById('menu-list'); list.innerHTML=''; curPage=0; list.style.transform='translateX(0)';
-    // 6개의 스킬을 4개씩 나눠서 2페이지로 구성
-    for(let i=0; i<unit.skills.length; i+=4) {
-      const page=document.createElement('div'); page.className='menu-page';
-      unit.skills.slice(i, i+4).forEach(s=>{
-        const btn=document.createElement('button'); 
-        btn.className=`skill-btn ff-box ${s.u?'ult-btn':''}`;
-        btn.innerHTML=`${s.n}<br><small>MP:${s.m}</small>`;
-        btn.disabled=unit.curMp<s.m; btn.onclick=()=>selectSkill(s, unit);
-        page.appendChild(btn);
-      });
-      list.appendChild(page);
+    const list = document.getElementById('menu-list');
+    list.innerHTML = '';
+
+    for (let i = 0; i < unit.skills.length; i += 4) {
+        const page = document.createElement('div');
+        page.className = 'menu-page';
+
+        unit.skills.slice(i, i + 4).forEach(s => {
+            const btn = document.createElement('button');
+            btn.className = `skill-btn ff-box ${s.u ? 'ult-btn' : ''}`;
+            btn.innerHTML = `${s.n}<br><small>MP:${s.m}</small>`;
+            btn.disabled = unit.curMp < s.m;
+            btn.onclick = () => selectSkill(s, unit);
+            page.appendChild(btn);
+        });
+
+        list.appendChild(page);
     }
-  }
+
+    // 중요
+    list.style.width = `${list.children.length * 100}%`;
+
+    [...list.children].forEach(page => {
+        page.style.minWidth = `${100 / list.children.length}%`;
+    });
+
+    curPage = 0;
+    list.style.transform = "translateX(0)";
+}
 
   function selectSkill(s, unit) {
     currentSkill=s; log(`대상을 선택! [${s.n}]`); 
