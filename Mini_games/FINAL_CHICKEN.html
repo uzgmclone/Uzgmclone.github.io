@@ -93,7 +93,7 @@
   // 캐릭터 데이터 정의            {n:"박치기",p:1.7,m:23},
   const charDB = [
     { name:"기사 병아리 쫑아르쫑아르", img:"🐥", hp:250, mp:100, atk:30, skills:[
-        {n:"평범한 공격",p:1,m:0}, {n:"전방에 괴성발사",p:1.4,m:15}, {n:"박치기",p:1.5,m:20}, {n:"방패 치기",p:2.7,m:33},{n:"발차기",p:1.9,m:27},{n:"발차고 주먹때리기",p:1.8,m:16},
+        {n:"평범한 공격",p:1,m:0,mpheal;10}, {n:"전방에 괴성발사",p:1.4,m:15}, {n:"박치기",p:1.5,m:20}, {n:"방패 치기",p:2.7,m:33},{n:"발차기",p:1.9,m:27},{n:"발차고 주먹때리기",p:1.8,m:16},
         {n:"필살: 대참격",p:3.0,m:40}, {n:"필살: 근육폭발",p:3.5,m:50}, {n:"궁극: 친구 바아르 부르기",p:7.0,m:95,u:true},{n:"궁극: 방패로 기절시키고 때리기",p:9.8,m:100,heal:10,u:true}
     ]},
     { name:"마법사 펭귄 아마펭르르", img:"🐧", hp:110, mp:150, atk:55, skills:[
@@ -238,7 +238,7 @@
   }
 
   function attackTarget(target) {
-    const attacker = [...myParty, ...enemies][turnIdx % (myParty.length+enemies.length)];
+    const attacker = [...myParty, ...enemies][turnIdx % (myParty.length+enemies.length)]; //공격담당 
     attacker.curMp -= currentSkill.m;
     
     let dmg = Math.floor(attacker.atk * currentSkill.p * (0.9+Math.random()*0.3));
@@ -254,10 +254,17 @@
     log(`${attacker.name}의 ${currentSkill.n}! ${dmg} 피해!`);
 
     if(currentSkill.heal){
-    attacker.curHp = Math.min(attacker.hp, attacker.curHp + currentSkill.heal);
+    attacker.curHp = Math.min(attacker.hp, attacker.curHp + currentSkill.heal); //자힐
 
     showPop(attacker, "+" + currentSkill.heal, "#00ff00", 30);
     log(`${attacker.name} HP ${currentSkill.heal} 회복!`);
+}
+
+    if(currentSkill.mpHeal){
+    attacker.curMp = Math.min(attacker.mp, attacker.curMp + currentSkill.mpHeal); //자mp흡수
+
+    showPop(attacker, "+" + currentSkill.mpHeal, "#00aaff", 30);
+    log(`${attacker.name} MP ${currentSkill.mpHeal} 회복!`);
 }
 
 //currentSkill = null;
