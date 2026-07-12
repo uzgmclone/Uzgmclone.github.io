@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>1인칭 반동 제어 사격장</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body {
+    width:100%; height:100%; overflow:hidden; background:#0d0f12;
+    font-family:'Segoe UI','Malgun Gothic',sans-serif; touch-action:none; user-select:none; color:#fff;
+  }
+  #app { position:relative; width:100vw; height:100vh; display:flex; flex-direction:column; }
+
+  #weaponBar {
+    display:flex; gap:6px; padding:8px; background:#15181d;
+    overflow-x:auto; white-space:nowrap; border-bottom:1px solid #2a2f37; z-index:5;
+  }
+  .weaponBtn {
+    flex:0 0 auto; padding:8px 14px; border-radius:8px; font-size:13px; font-weight:bold;
+    background:#23272e; color:#ccc; border:1px solid #3a4049; cursor:pointer;
+  }
+  .weaponBtn.active { background:#ffcc00; color:#111; border-color:#ffcc00; }
+
+  #statBar {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:6px 12px; background:#15181d; font-size:13px; color:#ddd;
+    border-bottom:1px solid #2a2f37; gap:8px; flex-wrap:wrap; z-index:5;
+  }
+  #statBar .grp { display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
+  #ammoText { font-size:16px; font-weight:bold; color:#ffcc00; }
+  #groupText { color:#8fd0f0; }
+  .smallBtn {
+    background:#23272e; border:1px solid #3a4049; color:#eee; border-radius:6px;
+    padding:6px 10px; font-size:12px; cursor:pointer;
+  }
+  #sensWrap { display:flex; align-items:center; gap:6px; font-size:12px; color:#bbb; }
+  #sensSlider { width:90px; }
+
+  #rangeWrap { position:relative; flex:1; overflow:hidden; }
+  canvas { display:block; width:100%; height:100%; }
+
+  /* 화면 중앙 크로스헤어 */
+  #crosshair {
+    position:absolute; top:50%; left:50%; width:22px; height:22px;
+    transform:translate(-50%,-50%); pointer-events:none; z-index:6;
+  }
+  #crosshair::before, #crosshair::after {
+    content:''; position:absolute; background:#00ff66;
+  }
+  #crosshair::before { left:50%; top:0; width:2px; height:8px; transform:translateX(-1px); }
+  #crosshair::after  { top:50%; left:0; height:2px; width:8px; transform:translateY(-1px); }
+  #crosshair .dot {
+    position:absolute; left:50%; top:50%; width:3px; height:3px; border-radius:50%;
+    background:#00ff66; transform:translate(-50%,-50%);
+  }
+  #crosshair .r,#crosshair .b,#crosshair .l2 { position:absolute; background:#00ff66; }
+  #crosshair .top    { left:50%; bottom:14px; width:2px; height:8px; transform:translateX(-1px); }
+  #crosshair .bottom { left:50%; top:14px; width:2px; height:8px; transform:translateX(-1px); }
+  #crosshair .left   { top:50%; right:14px; height:2px; width:8px; transform:translateY(-1px); }
+  #crosshair .right  { top:50%; left:14px; height:2px; width:8px; transform:translateY(-1px); }
+
+  #reloadOverlay {
+    position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+    background:rgba(0,0,0,.35); font-size:22px; font-weight:bold; color:#ffcc00;
+    letter-spacing:2px; pointer-events:none; z-index:7;
+  }
+  #lockHint {
+    position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+    background:rgba(0,0,0,.55); font-size:16px; color:#fff; text-align:center; z-index:8;
+    flex-direction:column; gap:10px; padding:20px;
+  }
+  #hintText {
+    position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+    font-size:12px; color:rgba(255,255,255,.65); text-align:center; pointer-events:none;
+    width:92%; z-index:6;
+  }
+
+  #fireBtn {
+    position:absolute; right:22px; bottom:26px; z-index:20;
+    width:88px; height:88px; border-radius:50%;
+    background:rgba(255,60,60,.35); border:2px solid rgba(255,255,255,.6);
+    color:#fff; font-size:14px; font-weight:bold;
+    display:none; align-items:center; justify-content:center; text-align:center;
+  }
+  #fireBtn.active { background:rgba(255,60,60,.65); }
+  #reloadBtnMobile {
+    position:absolute; right:30px; bottom:126px; z-index:20;
+    width:60px; height:60px; border-radius:50%;
+    background:rgba(255,255,255,.18); border:2px solid rgba(255,255,255,.5);
+    color:#fff; font-size:11px; display:none; align-items:center; justify-content:center; text-align:center;
+  }
+
+  /* 이동 조이스틱 (모바일) */
+  #moveJoystickZone {
+    position:absolute; left:22px; bottom:22px; width:130px; height:130px; z-index:20;
+    display:none;
+  }
+  #moveJoystickBase {
+    width:100%; height:100%; border-radius:50%;
+    background:rgba(255,255,255,.12); border:2px solid rgba(255,255,255,.4);
+    position:relative;
+  }
+  #moveJoystickKnob {
+    width:52px; height:52px; border-radius:50%;
+    background:rgba(255,255,255,.5); border:2px solid rgba(255,255,255,.8);
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  }
+
+  @media (max-width:900px){
+    #fireBtn, #reloadBtnMobile, #moveJoystickZone { display:flex; }
+    #moveJoystickZone { display:block; }
+  }
+
+  #startScreen {
+    position:absolute; inset:0; background:rgba(0,0,0,.85); z-index:40;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:24px;
+  }
+  #startScreen h1 { color:#ffcc00; font-size:26px; margin-bottom:12px; }
+  #startScreen p { font-size:14px; color:#ccc; margin:4px 0; max-width:440px; }
+  #startBtn {
+    margin-top:20px; padding:14px 38px; font-size:17px; font-weight:bold;
+    background:#ffcc00; color:#111; border:none; border-radius:8px; cursor:pointer;
+    box-shadow:0 4px 0 #b38f00;
+  }
+  #startBtn:active { transform:translateY(2px); box-shadow:0 2px 0 #b38f00; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="weaponBar"></div>
+
+  <div id="statBar">
+    <div class="grp">
+      <div id="ammoText">30 / 30</div>
+      <div id="groupText">그룹 크기: 0px</div>
+    </div>
+    <div class="grp">
+      <div id="sensWrap">감도 <input type="range" id="sensSlider" min="0.3" max="1.8" step="0.05" value="1"></div>
+      <div class="smallBtn" id="reloadBtn">🔄 재장전 (R)</div>
+      <div class="smallBtn" id="clearBtn">🧹 탄흔 지우기</div>
+      <div class="smallBtn" id="soundToggle">🔊 소리</div>
+    </div>
+  </div>
+
+  <div id="rangeWrap">
+    <canvas id="range"></canvas>
+    <div id="crosshair">
+      <span class="top"></span><span class="bottom"></span><span class="left"></span><span class="right"></span>
+      <span class="dot"></span>
+    </div>
+    <div id="reloadOverlay">재장전 중...</div>
+    <div id="lockHint">
+      <div>화면을 클릭하면 조준 모드가 시작됩니다</div>
+      <div style="font-size:12px;opacity:.7">ESC로 언제든 빠져나올 수 있어요</div>
+    </div>
+    <div id="hintText">PC: WASD 이동, 화면 클릭 후 마우스로 조준, 클릭 유지로 발사 · 모바일: 왼쪽 조이스틱 이동, 화면 드래그로 조준, 오른쪽 버튼으로 발사</div>
+    <div id="fireBtn">발사<br>(꾹 누르기)</div>
+    <div id="reloadBtnMobile">재장전</div>
+    <div id="moveJoystickZone">
+      <div id="moveJoystickBase"><div id="moveJoystickKnob"></div></div>
+    </div>
+  </div>
+
+  <div id="startScreen">
+    <h1>🎯 1인칭 반동 제어 사격장</h1>
+    <p>AUG · AKM · 베릴 M762 · M416 · SCAR-L · ACE32 총기별 반동을 1인칭 시점에서 직접 조준하며 연습하세요.</p>
+    <p>PC: WASD로 이동 · 화면 클릭 → 마우스로 조준 → 클릭 유지 발사 → 반동 반대 방향(아래)으로 마우스를 눌러 제어</p>
+    <p>모바일: 왼쪽 조이스틱으로 이동 · 화면을 드래그해서 조준 → 오른쪽 아래 발사 버튼을 꾹 눌러 사격</p>
+    <button id="startBtn">연습 시작</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  const weaponBar = document.getElementById('weaponBar');
+  const ammoText = document.getElementById('ammoText');
+  const groupText = document.getElementById('groupText');
+  const sensSlider = document.getElementById('sensSlider');
+  const reloadBtn = document.getElementById('reloadBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const soundToggle = document.getElementById('soundToggle');
+  const rangeWrap = document.getElementById('rangeWrap');
+  const canvas = document.getElementById('range');
+  const reloadOverlay = document.getElementById('reloadOverlay');
+  const lockHint = document.getElementById('lockHint');
+  const startScreen = document.getElementById('startScreen');
+  const startBtn = document.getElementById('startBtn');
+  const fireBtn = document.getElementById('fireBtn');
+  const reloadBtnMobile = document.getElementById('reloadBtnMobile');
+  const moveJoystickZone = document.getElementById('moveJoystickZone');
+  const moveJoystickBase = document.getElementById('moveJoystickBase');
+  const moveJoystickKnob = document.getElementById('moveJoystickKnob');
+  const isTouchDevice = 'ontouchstart' in window;
+
+  // ===================== 무기 데이터 =====================
+  const WEAPONS = {
+    aug:   { key:'aug',   label:'AUG',       rpm:700, mag:30, vKick:0.020, hSway:0.010, hJitter:0.007, seed:0.0, freq:900, decay:0.10, color:0x9fb4c7 },
+    akm:   { key:'akm',   label:'AKM',       rpm:600, mag:30, vKick:0.034, hSway:0.020, hJitter:0.016, seed:1.7, freq:260, decay:0.14, color:0x6b4a2f },
+    m762:  { key:'m762',  label:'베릴 M762', rpm:600, mag:30, vKick:0.040, hSway:0.024, hJitter:0.019, seed:2.3, freq:230, decay:0.16, color:0x3f4a3a },
+    m416:  { key:'m416',  label:'M416',      rpm:750, mag:30, vKick:0.022, hSway:0.012, hJitter:0.009, seed:0.6, freq:620, decay:0.09, color:0x2c2c2c },
+    scar:  { key:'scar',  label:'SCAR-L',    rpm:600, mag:30, vKick:0.024, hSway:0.014, hJitter:0.010, seed:1.1, freq:520, decay:0.11, color:0x4a4a2c },
+    ace32: { key:'ace32', label:'ACE32',     rpm:600, mag:30, vKick:0.036, hSway:0.019, hJitter:0.014, seed:2.0, freq:280, decay:0.14, color:0x555555 },
+  };
+  const order = ['aug','akm','m762','m416','scar','ace32'];
+  order.forEach(k=>{
+    const b = document.createElement('div');
+    b.className = 'weaponBtn' + (k==='akm' ? ' active' : '');
+    b.textContent = WEAPONS[k].label;
+    b.dataset.key = k;
+    weaponBar.appendChild(b);
+  });
+  let currentWeapon = WEAPONS['akm'];
+
+  // ===================== THREE.JS 씬 =====================
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x1b1e22);
+  scene.fog = new THREE.Fog(0x1b1e22, 15, 40);
+
+  const camera = new THREE.PerspectiveCamera(70, 1, 0.05, 200);
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  function resizeRenderer(){
+    const rect = rangeWrap.getBoundingClientRect();
+    renderer.setSize(rect.width, rect.height);
+    camera.aspect = rect.width / rect.height;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resizeRenderer);
+
+  // 1인칭 리그: yaw(좌우) -> pitch(상하) -> 카메라
+  const yawObject = new THREE.Object3D();
+  yawObject.position.set(0, 1.6, 9);
+  const pitchObject = new THREE.Object3D();
+  yawObject.add(pitchObject);
+  pitchObject.add(camera);
+  scene.add(yawObject);
+
+  let yaw = 0;
+  let pitch = 0; // 반동 + 플레이어 보정 누적치 (라디안)
+
+  // ===================== 조명 =====================
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x33362e, 0.7));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.8);
+  sun.position.set(6, 10, 4);
+  scene.add(sun);
+
+  // ===================== 사격장 공간 =====================
+  const room = new THREE.Mesh(
+    new THREE.BoxGeometry(20, 8, 26),
+    new THREE.MeshStandardMaterial({ color:0x3a3f46, side:THREE.BackSide })
+  );
+  room.position.set(0, 4, -2);
+  scene.add(room);
+
+  function checkerTexture(c1,c2){
+    const size=64;
+    const cvs=document.createElement('canvas'); cvs.width=cvs.height=size;
+    const cx=cvs.getContext('2d');
+    cx.fillStyle=c1; cx.fillRect(0,0,size,size);
+    cx.fillStyle=c2; cx.fillRect(0,0,size/2,size/2); cx.fillRect(size/2,size/2,size/2,size/2);
+    const tex=new THREE.CanvasTexture(cvs);
+    tex.wrapS=tex.wrapT=THREE.RepeatWrapping; tex.repeat.set(14,18);
+    tex.magFilter=THREE.NearestFilter;
+    return tex;
+  }
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(20,26),
+    new THREE.MeshStandardMaterial({ map:checkerTexture('#4a4d52','#43464b') })
+  );
+  floor.rotation.x = -Math.PI/2;
+  floor.position.set(0, 0.01, -2);
+  scene.add(floor);
+
+  // ===================== 표적 (캔버스 텍스처) =====================
+  const targetCanvas = document.createElement('canvas');
+  targetCanvas.width = 512; targetCanvas.height = 512;
+  const tctx = targetCanvas.getContext('2d');
+  function drawTargetBase(){
+    tctx.fillStyle = '#e9e4d8';
+    tctx.fillRect(0,0,512,512);
+    const rings = [230,190,150,105,60,25];
+    const colors = ['#ffffff','#2c2c2c','#ffffff','#2c2c2c','#ffffff','#c0392b'];
+    rings.forEach((r,i)=>{
+      tctx.beginPath();
+      tctx.arc(256,256,r,0,Math.PI*2);
+      tctx.fillStyle = colors[i];
+      tctx.fill();
+    });
+  }
+  drawTargetBase();
+  const targetTexture = new THREE.CanvasTexture(targetCanvas);
+  const targetPlane = new THREE.Mesh(
+    new THREE.PlaneGeometry(4,4),
+    new THREE.MeshBasicMaterial({ map: targetTexture })
+  );
+  targetPlane.position.set(0, 2.0, -13.9);
+  scene.add(targetPlane);
+
+  const backWallDeco = new THREE.Mesh(
+    new THREE.PlaneGeometry(8,6),
+    new THREE.MeshStandardMaterial({ color:0x2b2e33 })
+  );
+  backWallDeco.position.set(0, 2.0, -14);
+  scene.add(backWallDeco);
+
+  // ===================== 1인칭 총 뷰모델 =====================
+  const gunGroup = new THREE.Group();
+  camera.add(gunGroup);
+  gunGroup.position.set(0.32, -0.32, -0.6);
+
+  let gunBody, gunBarrel, muzzleFlash;
+  function buildGunModel(weapon){
+    gunGroup.clear();
+    const mat = new THREE.MeshStandardMaterial({ color: weapon.color, metalness:0.4, roughness:0.5 });
+    gunBody = new THREE.Mesh(new THREE.BoxGeometry(0.12,0.14,0.55), mat);
+    gunGroup.add(gunBody);
+    const stock = new THREE.Mesh(new THREE.BoxGeometry(0.1,0.12,0.22), mat);
+    stock.position.set(0,-0.02,0.32);
+    gunGroup.add(stock);
+    gunBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.35,10), mat);
+    gunBarrel.rotation.x = Math.PI/2;
+    gunBarrel.position.set(0,0.02,-0.42);
+    gunGroup.add(gunBarrel);
+    const mag = new THREE.Mesh(new THREE.BoxGeometry(0.07,0.22,0.1), new THREE.MeshStandardMaterial({color:0x1a1a1a}));
+    mag.position.set(0,-0.18,-0.05);
+    gunGroup.add(mag);
+
+    muzzleFlash = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.18,0.18),
+      new THREE.MeshBasicMaterial({ color:0xffdd55, transparent:true, opacity:0, side:THREE.DoubleSide })
+    );
+    muzzleFlash.position.set(0,0.02,-0.62);
+    gunGroup.add(muzzleFlash);
+  }
+  buildGunModel(currentWeapon);
+
+  let gunKick = 0; // 시각적 총 반동 애니메이션
+
+  // ===================== 무기 선택 =====================
+  function selectWeapon(key){
+    currentWeapon = WEAPONS[key];
+    [...weaponBar.children].forEach(b=> b.classList.toggle('active', b.dataset.key===key));
+    buildGunModel(currentWeapon);
+    resetSpray(true);
+    ammo = currentWeapon.mag;
+    updateHUD();
+  }
+  weaponBar.addEventListener('click', e=>{
+    const btn = e.target.closest('.weaponBtn');
+    if (!btn) return;
+    selectWeapon(btn.dataset.key);
+  });
+
+  // ===================== 사운드 =====================
+  let audioCtx = null;
+  let soundOn = true;
+  function initAudio(){ if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }
+  function playGunshot(weapon){
+    if (!soundOn || !audioCtx) return;
+    const t = audioCtx.currentTime;
+    const bufferSize = Math.floor(audioCtx.sampleRate * weapon.decay);
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i=0;i<bufferSize;i++) data[i] = (Math.random()*2-1) * Math.pow(1-i/bufferSize,2);
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    const band = audioCtx.createBiquadFilter();
+    band.type='bandpass'; band.frequency.value = weapon.freq + (Math.random()*40-20); band.Q.value=0.9;
+    const noiseGain = audioCtx.createGain(); noiseGain.gain.value=0.55;
+    noise.connect(band); band.connect(noiseGain); noiseGain.connect(audioCtx.destination);
+    noise.start(t); noise.stop(t+weapon.decay);
+
+    const osc = audioCtx.createOscillator();
+    const oscGain = audioCtx.createGain();
+    osc.type='triangle';
+    osc.frequency.setValueAtTime(weapon.freq*0.5, t);
+    osc.frequency.exponentialRampToValueAtTime(Math.max(weapon.freq*0.18,35), t+weapon.decay*0.7);
+    oscGain.gain.setValueAtTime(0.45, t);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, t+weapon.decay*0.75);
+    osc.connect(oscGain); oscGain.connect(audioCtx.destination);
+    osc.start(t); osc.stop(t+weapon.decay*0.8);
+  }
+  soundToggle.addEventListener('click', ()=>{
+    soundOn = !soundOn;
+    soundToggle.textContent = soundOn ? '🔊 소리' : '🔇 소리';
+  });
+
+  // ===================== 반동 / 상태 =====================
+  let ammo = currentWeapon.mag;
+  let shotIndex = 0;
+  let recoilYaw = 0, recoilPitch = 0;
+  let triggerDown = false;
+  let reloading = false;
+  let lastShotTime = 0;
+  let bulletHoles = []; // {u,v} 0~1 텍스처 좌표
+  let running = false;
+  let locked = false;
+
+  // ===================== 캐릭터 이동 상태 =====================
+  const moveKeys = {};
+  let joyMoveX = 0, joyMoveY = 0, moveTouchId = null;
+  const MOVE_SPEED = 4.2;
+  const ROOM_BOUNDS = { minX:-9, maxX:9, minZ:-13, maxZ:8 };
+
+  function recoilStep(weapon, i){
+    const climb = Math.min(i,12)/12;
+    const dPitch = weapon.vKick * (0.55 + 0.45*climb); // 위로 튐
+    const dYaw = Math.sin(i*1.15 + weapon.seed) * weapon.hSway * (0.4+0.6*climb)
+                 + (Math.random()-0.5) * weapon.hJitter;
+    return { dPitch, dYaw };
+  }
+
+  function resetSpray(clearHoles){
+    shotIndex = 0;
+    recoilYaw = 0; recoilPitch = 0;
+    if (clearHoles){ bulletHoles = []; drawTargetBase(); targetTexture.needsUpdate = true; }
+  }
+
+  const raycaster = new THREE.Raycaster();
+  const fwdVec = new THREE.Vector3();
+  const camPos = new THREE.Vector3();
+
+  function fireShot(){
+    const r = recoilStep(currentWeapon, shotIndex);
+    pitch += r.dPitch;
+    yaw += r.dYaw;
+    pitch = Math.max(-1.4, Math.min(1.4, pitch));
+
+    // 총구 반동 애니메이션
+    gunKick = 0.06;
+    muzzleFlash.material.opacity = 1;
+    setTimeout(()=>{ if(muzzleFlash) muzzleFlash.material.opacity = 0; }, 45);
+
+    // 레이캐스트로 표적 명중 위치 계산
+    camera.getWorldPosition(camPos);
+    camera.getWorldDirection(fwdVec);
+    raycaster.set(camPos, fwdVec);
+    const hits = raycaster.intersectObject(targetPlane);
+    if (hits.length > 0 && hits[0].uv){
+      const uv = hits[0].uv;
+      bulletHoles.push({ u: uv.x, v: uv.y });
+      if (bulletHoles.length > 300) bulletHoles.shift();
+      drawTargetBase();
+      bulletHoles.forEach(h=>{
+        tctx.beginPath();
+        tctx.arc(h.u*512, (1-h.v)*512, 5, 0, Math.PI*2);
+        tctx.fillStyle = 'rgba(20,20,20,0.9)';
+        tctx.fill();
+      });
+      targetTexture.needsUpdate = true;
+    }
+
+    ammo--; shotIndex++;
+    playGunshot(currentWeapon);
+    updateHUD();
+    if (ammo <= 0) triggerDown = false;
+  }
+
+  function startReload(){
+    if (reloading || ammo === currentWeapon.mag) return;
+    reloading = true; triggerDown = false;
+    reloadOverlay.style.display='flex';
+    setTimeout(()=>{
+      ammo = currentWeapon.mag;
+      reloading = false;
+      reloadOverlay.style.display='none';
+      updateHUD();
+    }, 1500);
+  }
+
+  function updateHUD(){
+    ammoText.textContent = `${Math.max(ammo,0)} / ${currentWeapon.mag}`;
+    if (bulletHoles.length > 1){
+      let mu=0,mv=0;
+      bulletHoles.forEach(h=>{ mu+=h.u; mv+=h.v; });
+      mu/=bulletHoles.length; mv/=bulletHoles.length;
+      let maxD=0;
+      bulletHoles.forEach(h=>{
+        const d = Math.hypot((h.u-mu)*512, (h.v-mv)*512);
+        if (d>maxD) maxD=d;
+      });
+      groupText.textContent = `그룹 크기: ${Math.round(maxD*2)}px`;
+    } else {
+      groupText.textContent = '그룹 크기: 0px';
+    }
+  }
+
+  reloadBtn.addEventListener('click', startReload);
+  reloadBtnMobile.addEventListener('touchstart', e=>{ e.preventDefault(); e.stopPropagation(); startReload(); }, {passive:false});
+  clearBtn.addEventListener('click', ()=>{ bulletHoles=[]; drawTargetBase(); targetTexture.needsUpdate=true; updateHUD(); });
+  window.addEventListener('keydown', e=>{ if (e.key.toLowerCase()==='r') startReload(); });
+  window.addEventListener('keydown', e=>{
+    const k = e.key.toLowerCase();
+    if (['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k)){
+      moveKeys[k] = true;
+      e.preventDefault();
+    }
+  });
+  window.addEventListener('keyup', e=>{ moveKeys[e.key.toLowerCase()] = false; });
+
+  // ===================== PC 입력: Pointer Lock + 마우스 =====================
+  function requestLock(){
+    if (canvas.requestPointerLock) canvas.requestPointerLock();
+  }
+  canvas.addEventListener('click', ()=>{
+    if (running && !isTouchDevice) requestLock();
+  });
+  document.addEventListener('pointerlockchange', ()=>{
+    locked = document.pointerLockElement === canvas;
+    lockHint.style.display = (running && !locked && !isTouchDevice) ? 'flex' : 'none';
+  });
+  document.addEventListener('mousemove', e=>{
+    if (!locked) return;
+    const sens = parseFloat(sensSlider.value) * 0.0022;
+    yaw -= (e.movementX||0) * sens;
+    pitch -= (e.movementY||0) * sens;
+    pitch = Math.max(-1.4, Math.min(1.4, pitch));
+  });
+  window.addEventListener('mousedown', ()=>{
+    if (running && locked && !reloading){
+      triggerDown = true;
+      resetSpray(false);
+      lastShotTime = performance.now() - (60000/currentWeapon.rpm);
+    }
+  });
+  window.addEventListener('mouseup', ()=>{ triggerDown = false; });
+
+  // ===================== 모바일 입력: 드래그로 조준 + 버튼으로 발사 =====================
+  let lookTouchId = null, lookLast = null;
+  canvas.addEventListener('touchstart', e=>{
+    e.preventDefault();
+    for (const t of e.changedTouches){
+      if (lookTouchId === null){
+        lookTouchId = t.identifier;
+        lookLast = { x:t.clientX, y:t.clientY };
+      }
+    }
+  }, {passive:false});
+  canvas.addEventListener('touchmove', e=>{
+    e.preventDefault();
+    for (const t of e.changedTouches){
+      if (t.identifier === lookTouchId){
+        const sens = parseFloat(sensSlider.value) * 0.006;
+        yaw -= (t.clientX - lookLast.x) * sens;
+        pitch -= (t.clientY - lookLast.y) * sens;
+        pitch = Math.max(-1.4, Math.min(1.4, pitch));
+        lookLast = { x:t.clientX, y:t.clientY };
+      }
+    }
+  }, {passive:false});
+  canvas.addEventListener('touchend', e=>{
+    for (const t of e.changedTouches){
+      if (t.identifier === lookTouchId){ lookTouchId = null; lookLast = null; }
+    }
+  }, {passive:false});
+
+  function moveJoystickPos(clientX, clientY){
+    const rect = moveJoystickBase.getBoundingClientRect();
+    const cx = rect.left + rect.width/2;
+    const cy = rect.top + rect.height/2;
+    let dx = clientX - cx;
+    let dy = clientY - cy;
+    const maxR = rect.width/2;
+    const dist = Math.hypot(dx,dy);
+    if (dist > maxR){ dx = dx/dist*maxR; dy = dy/dist*maxR; }
+    moveJoystickKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+    joyMoveX = dx/maxR;
+    joyMoveY = -dy/maxR;
+  }
+  function resetMoveJoystick(){
+    joyMoveX = 0; joyMoveY = 0; moveTouchId = null;
+    moveJoystickKnob.style.transform = 'translate(-50%,-50%)';
+  }
+  moveJoystickZone.addEventListener('touchstart', e=>{
+    e.preventDefault(); e.stopPropagation();
+    const t = e.changedTouches[0];
+    moveTouchId = t.identifier;
+    moveJoystickPos(t.clientX, t.clientY);
+  }, {passive:false});
+  moveJoystickZone.addEventListener('touchmove', e=>{
+    e.preventDefault(); e.stopPropagation();
+    for (const t of e.changedTouches){
+      if (t.identifier === moveTouchId) moveJoystickPos(t.clientX, t.clientY);
+    }
+  }, {passive:false});
+  moveJoystickZone.addEventListener('touchend', e=>{
+    e.preventDefault(); e.stopPropagation();
+    resetMoveJoystick();
+  }, {passive:false});
+
+  fireBtn.addEventListener('touchstart', e=>{
+    e.preventDefault(); e.stopPropagation();
+    if (!running || reloading) return;
+    fireBtn.classList.add('active');
+    triggerDown = true;
+    resetSpray(false);
+    lastShotTime = performance.now() - (60000/currentWeapon.rpm);
+  }, {passive:false});
+  fireBtn.addEventListener('touchend', e=>{
+    e.preventDefault(); e.stopPropagation();
+    fireBtn.classList.remove('active');
+    triggerDown = false;
+  }, {passive:false});
+
+  // ===================== 렌더 루프 =====================
+  let lastTs = 0;
+  function loop(ts){
+    requestAnimationFrame(loop);
+    const dt = Math.min((ts - lastTs) / 1000, 0.05) || 0;
+    lastTs = ts;
+
+    if (!running) return;
+
+    if (triggerDown && !reloading && ammo > 0){
+      const interval = 60000/currentWeapon.rpm;
+      if (ts - lastShotTime >= interval){
+        lastShotTime = ts;
+        fireShot();
+      }
+    }
+
+    // 캐릭터 이동 처리
+    let mf = 0, mr = 0;
+    if (moveTouchId !== null){
+      mf = joyMoveY;
+      mr = joyMoveX;
+    } else {
+      if (moveKeys['w'] || moveKeys['arrowup']) mf += 1;
+      if (moveKeys['s'] || moveKeys['arrowdown']) mf -= 1;
+      if (moveKeys['d'] || moveKeys['arrowright']) mr += 1;
+      if (moveKeys['a'] || moveKeys['arrowleft']) mr -= 1;
+      const len = Math.hypot(mf, mr);
+      if (len > 1){ mf /= len; mr /= len; }
+    }
+    if (mf !== 0 || mr !== 0){
+      const forwardX = -Math.sin(yaw), forwardZ = -Math.cos(yaw);
+      const rightX = Math.cos(yaw), rightZ = -Math.sin(yaw);
+      let nx = yawObject.position.x + (forwardX*mf + rightX*mr) * MOVE_SPEED * dt;
+      let nz = yawObject.position.z + (forwardZ*mf + rightZ*mr) * MOVE_SPEED * dt;
+      nx = Math.max(ROOM_BOUNDS.minX, Math.min(ROOM_BOUNDS.maxX, nx));
+      nz = Math.max(ROOM_BOUNDS.minZ, Math.min(ROOM_BOUNDS.maxZ, nz));
+      yawObject.position.x = nx;
+      yawObject.position.z = nz;
+    }
+
+    yawObject.rotation.y = yaw;
+    pitchObject.rotation.x = pitch;
+
+    // 총 반동 시각 효과 감쇠
+    gunKick *= 0.82;
+    gunGroup.position.z = -0.6 - gunKick;
+
+    renderer.render(scene, camera);
+  }
+
+  startBtn.addEventListener('click', ()=>{
+    initAudio();
+    if (audioCtx && audioCtx.state==='suspended') audioCtx.resume();
+    startScreen.style.display = 'none';
+    resizeRenderer();
+    running = true;
+    if (!isTouchDevice) requestLock();
+  });
+
+  resizeRenderer();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
