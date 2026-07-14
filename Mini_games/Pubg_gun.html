@@ -203,8 +203,12 @@
     m416:  { key:'m416',  label:'M416',      rpm:750, mag:30, vKick:0.022, hSway:0.012, hJitter:0.009, seed:0.6, freq:620, decay:0.09, color:0x2c2c2c },
     scar:  { key:'scar',  label:'SCAR-L',    rpm:600, mag:30, vKick:0.024, hSway:0.014, hJitter:0.010, seed:1.1, freq:520, decay:0.11, color:0x4a4a2c },
     ace32: { key:'ace32', label:'ACE32',     rpm:600, mag:30, vKick:0.036, hSway:0.019, hJitter:0.014, seed:2.0, freq:280, decay:0.14, color:0x555555 },
+    qbz:  { key:'qbz',  label:'qbz',    rpm:760, mag:30, vKick:0.021, hSway:0.014, hJitter:0.010, seed:1.1, freq:520, decay:0.11, color:0x4a4a2c },
+    acr:  { key:'acr',  label:'acr',    rpm:770, mag:30, vKick:0.044, hSway:0.014, hJitter:0.010, seed:1.1, freq:520, decay:0.11, color:0x4a4a2c },
+    k2:  { key:'k2',  label:'k2',    rpm:650, mag:30, vKick:0.014, hSway:0.011, hJitter:0.008, seed:1.1, freq:520, decay:0.11, color:0x4a4a2c },
+    k1a:  { key:'k1a',  label:'k1a',    rpm:700, mag:30, vKick:0.004, hSway:0.002, hJitter:0.002, seed:1.1, freq:720, decay:0.11, color:0x4a4a2c },
   };
-  const order = ['aug','akm','m762','m416','scar','ace32'];
+  const order = ['aug','akm','m762','m416','scar','ace32','qbz','acr','k2','k1a'];
   order.forEach(k=>{
     const b = document.createElement('div');
     b.className = 'weaponBtn' + (k==='akm' ? ' active' : '');
