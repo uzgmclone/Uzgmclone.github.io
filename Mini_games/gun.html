@@ -208,8 +208,33 @@
     k2:  { key:'k2',  label:'k2',    rpm:650, mag:30, vKick:0.014, hSway:0.011, hJitter:0.008, seed:1.1, freq:520, decay:0.11, color:0x4a4a2c },
     k1a:  { key:'k1a',  label:'k1a',    rpm:700, mag:30, vKick:0.004, hSway:0.002, hJitter:0.002, seed:1.1, freq:720, decay:0.11, color:0x4a4a2c },
     k2c1:  { key:'k2c1',  label:'k2c1',    rpm:670, mag:30, vKick:0.012, hSway:0.011, hJitter:0.007, seed:1.1, freq:520, decay:0.11, color:0x4a4a2c },
+    mp5:  { key:'mp5',  label:'mp5',    rpm:870, mag:30, vKick:0.006, hSway:0.003, hJitter:0.007, seed:1.1, freq:520, decay:0.11, color:0x4a4a2c },
+    stg44:  { key:'stg44',  label:'stg44',    rpm:640, mag:30, vKick:0.032, hSway:0.009, hJitter:0.003, seed:1.1, freq:420, decay:0.11, color:0x4a4a2c },
+    rpd:  { key:'rpd',  label:'rpd',    rpm:690, mag:50, vKick:0.032, hSway:0.021, hJitter:0.007, seed:1.1, freq:520, decay:0.11, color:0x4a4a2c },
+    m16:  { key:'m16',  label:'m16(auto)',    rpm:570, mag:30, vKick:0.025, hSway:0.015, hJitter:0.007, seed:2.1, freq:520, decay:0.11, color:0x4a4a2c },
+    ak74:  { key:'ak74',  label:'ak74',    rpm:680, mag:30, vKick:0.036, hSway:0.018, hJitter:0.008, seed:1.1, freq:520, decay:0.11, color:0x4a4a2c },
+    vector:  { key:'vector',  label:'vector',    rpm:990, mag:25, vKick:0.007, hSway:0.001, hJitter:0.007, seed:1.1, freq:320, decay:0.11, color:0x4a4a2c },
+    ak12:  { key:'ak12',  label:'ak12',    rpm:720, mag:30, vKick:0.0199, hSway:0.015, hJitter:0.007, seed:1.1, freq:520, decay:0.11, color:0x4a4a2c },
+    mcx:  { key:'mcx',  label:'mcx',    rpm:870, mag:30, vKick:0.010, hSway:0.010, hJitter:0.007, seed:1.1, freq:420, decay:0.11, color:0x4a4a2c },
+    pepper_gun:  { key:'pepper_gun',  label:'pepper_gun',    rpm:2300, mag:200, vKick:0.001, hSway:0.001, hJitter:0.007, seed:1.1, freq:320, decay:0.11, color:0x4a4a2c },
+    minigun:  { key:'minigun',  label:'minigun',    rpm:1000, mag:200, vKick:0.057, hSway:0.021, hJitter:0.007, seed:1.1, freq:320, decay:0.11, color:0x4a4a2c },
+    m4a1:  { key:'m4a1',  label:'m4a1',    rpm:600, mag:30, vKick:0.00999, hSway:0.006, hJitter:0.007, seed:1.1, freq:520, decay:0.11, color:0x4a4a2c },
+    rpk:  { key:'rpk',  label:'rpk',    rpm:625, mag:50, vKick:0.027, hSway:0.0132, hJitter:0.007, seed:1.1, freq:450, decay:0.11, color:0x4a4a2c },
+
+
+
+
+
+
+
+
+
+
+
+
+
   };
-  const order = ['aug','akm','m762','m416','scar','ace32','qbz','acr','k2','k1a','k2c1'];
+  const order = ['aug','akm','m762','m416','scar','ace32','qbz','acr','k2','k1a','k2c1','mp5','stg44','rpd','m16','ak74','vector','ak12','mcx','pepper_gun','minigun','m4a1','rpk'];
   order.forEach(k=>{
     const b = document.createElement('div');
     b.className = 'weaponBtn' + (k==='akm' ? ' active' : '');
