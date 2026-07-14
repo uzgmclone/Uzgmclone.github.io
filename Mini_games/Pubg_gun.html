@@ -150,10 +150,10 @@
       <span class="top"></span><span class="bottom"></span><span class="left"></span><span class="right"></span>
       <span class="dot"></span>
     </div>
-    <div id="reloadOverlay">재장전 중...</div>
+    <div id="reloadOverlay">재장전...</div>
     <div id="lockHint">
-      <div>화면을 클릭하면 조준 모드가 시작됩니다</div>
-      <div style="font-size:12px;opacity:.7">ESC로 언제든 빠져나올 수 있어요</div>
+      <div>화면을 클릭하면 조준 모드가 시작!</div>
+      <div style="font-size:12px;opacity:.7">ESC로 언제든 탈출 할 수 있음!</div>
     </div>
     <div id="hintText">PC: WASD 이동, 화면 클릭 후 마우스로 조준, 클릭 유지로 발사 · 모바일: 왼쪽 조이스틱 이동, 화면 드래그로 조준, 오른쪽 버튼으로 발사</div>
     <div id="fireBtn">발사<br>(꾹 누르기)</div>
@@ -165,9 +165,9 @@
 
   <div id="startScreen">
     <h1>🎯 1인칭 반동 제어 사격장</h1>
-    <p>AUG · AKM · 베릴 M762 · M416 · SCAR-L · ACE32 총기별 반동을 1인칭 시점에서 직접 조준하며 연습하세요.</p>
-    <p>PC: WASD로 이동 · 화면 클릭 → 마우스로 조준 → 클릭 유지 발사 → 반동 반대 방향(아래)으로 마우스를 눌러 제어</p>
-    <p>모바일: 왼쪽 조이스틱으로 이동 · 화면을 드래그해서 조준 → 오른쪽 아래 발사 버튼을 꾹 눌러 사격</p>
+    <p>AUG · AKM · 베릴 M762 · M416 · SCAR-L · ACE32 총기별 반동을 1인칭 시점에서 직접 조준하며 연습!</p>
+    <p>PC: WASD로 이동 · 화면 클릭 → 마우스로 조준 → 클릭 유지 발사 → 반동 반대 방향(아래)으로 마우스를 눌러 제어!</p>
+    <p>모바일: 왼쪽 조이스틱으로 이동 · 화면을 드래그해서 조준 → 오른쪽 아래 발사 버튼을 꾹 눌러 사격!</p>
     <button id="startBtn">연습 시작</button>
   </div>
 </div>
@@ -197,9 +197,9 @@
 
   // ===================== 무기 데이터 =====================
   const WEAPONS = {
-    aug:   { key:'aug',   label:'AUG',       rpm:700, mag:30, vKick:0.020, hSway:0.010, hJitter:0.007, seed:0.0, freq:900, decay:0.10, color:0x9fb4c7 },
+    aug:   { key:'aug',   label:'AUG',       rpm:750, mag:30, vKick:0.025, hSway:0.013, hJitter:0.009, seed:0.0, freq:750, decay:0.12, color:0x9fb4c7 },
     akm:   { key:'akm',   label:'AKM',       rpm:600, mag:30, vKick:0.034, hSway:0.020, hJitter:0.016, seed:1.7, freq:260, decay:0.14, color:0x6b4a2f },
-    m762:  { key:'m762',  label:'베릴 M762', rpm:600, mag:30, vKick:0.040, hSway:0.024, hJitter:0.019, seed:2.3, freq:230, decay:0.16, color:0x3f4a3a },
+    m762:  { key:'m762',  label:'베릴 M762', rpm:650, mag:30, vKick:0.080, hSway:0.044, hJitter:0.019, seed:2.3, freq:230, decay:0.16, color:0x3f4a3a },
     m416:  { key:'m416',  label:'M416',      rpm:750, mag:30, vKick:0.022, hSway:0.012, hJitter:0.009, seed:0.6, freq:620, decay:0.09, color:0x2c2c2c },
     scar:  { key:'scar',  label:'SCAR-L',    rpm:600, mag:30, vKick:0.024, hSway:0.014, hJitter:0.010, seed:1.1, freq:520, decay:0.11, color:0x4a4a2c },
     ace32: { key:'ace32', label:'ACE32',     rpm:600, mag:30, vKick:0.036, hSway:0.019, hJitter:0.014, seed:2.0, freq:280, decay:0.14, color:0x555555 },
