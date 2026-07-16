@@ -222,7 +222,7 @@
     rpk:  { key:'rpk',  label:'rpk',    rpm:625, mag:50, vKick:0.027, hSway:0.0132, hJitter:0.007, seed:1.1, freq:450, decay:0.11, color:0x4a4a2c },
     ak47:  { key:'ak47',  label:'ak47',    rpm:625, mag:30, vKick:0.037, hSway:0.0432, hJitter:0.019, seed:1.1, freq:550, decay:0.11, color:0x4a4a2c },
     mk47:  { key:'mk47',  label:'mk47',    rpm:700, mag:20, vKick:0.04, hSway:0.0232, hJitter:0.019, seed:1.1, freq:750, decay:0.11, color:0x4a4a2c },
-   
+   hk33:  { key:'hk33',  label:'hk33',    rpm:825, mag:30, vKick:0.016, hSway:0.0032, hJitter:0.019, seed:1.1, freq:531, decay:0.11, color:0x4a4a2c },
 
 
 
@@ -237,7 +237,7 @@
 
 
   };
-  const order = ['aug','akm','m762','m416','scar','ace32','qbz','acr','k2','k1a','k2c1','mp5','stg44','rpd','m16','ak74','vector','ak12','mcx','pepper_gun','minigun','m4a1','rpk','ak47','mk47'];
+  const order = ['aug','akm','m762','m416','scar','ace32','qbz','acr','k2','k1a','k2c1','mp5','stg44','rpd','m16','ak74','vector','ak12','mcx','pepper_gun','minigun','m4a1','rpk','ak47','mk47','hk33'];
   order.forEach(k=>{
     const b = document.createElement('div');
     b.className = 'weaponBtn' + (k==='akm' ? ' active' : '');
