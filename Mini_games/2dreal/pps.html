@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>리얼 2D 생체 물리 시뮬레이터 v3.2 - 모듈 분리 에디션2</title>
+    <style>
+        body {
+            background-color: #0b0b0e;
+            color: #f1f1f1;
+            font-family: 'Malgun Gothic', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .simulator-wrapper {
+            background: #181820;
+            border: 3px solid #ff5722;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 0 30px rgba(255, 87, 34, 0.4);
+        }
+        canvas {
+            background: #050508;
+            border-radius: 12px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
+            display: block;
+            margin: 0 auto 20px auto;
+        }
+        .container {
+            width: 520px;
+            background: #20202a;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        }
+        .gauge-box { margin-bottom: 14px; text-align: left; font-size: 14px; font-weight: bold; }
+        .bar-container {
+            width: 100%; background: #111; height: 22px;
+            border-radius: 11px; overflow: hidden; margin-top: 5px;
+            border: 1px solid #444;
+        }
+        .bar-fill { height: 100%; transition: width 0.08s ease-out, background 0.3s; }
+        #stamina-bar { width: 100%; background: #4CAF50; }
+        #debris-bar { width: 0%; background: #ffeb3b; }
+        #fluid-bar { width: 0%; background: #00bcd4; }
+        .button-group { display: flex; gap: 12px; margin-top: 20px; }
+        button {
+            background: #ff5722; color: white; border: none;
+            padding: 14px 20px; font-size: 16px; border-radius: 8px;
+            cursor: pointer; font-weight: bold; flex: 1;
+            box-shadow: 0 4px 10px rgba(255,87,34,0.3);
+            transition: all 0.1s;
+        }
+        button:hover { background: #f4511e; transform: translateY(-2px); }
+        button:active { transform: translateY(0); }
+        button:disabled { background: #444; color: #888; box-shadow: none; cursor: not-allowed; transform: none; }
+        #log {
+            margin-top: 15px; height: 90px; background: #08080c;
+            border: 1px solid #333; padding: 12px; overflow-y: auto;
+            font-size: 13px; text-align: left; color: #00ffcc;
+            border-radius: 8px; font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+
+<div class="simulator-wrapper">
+    <h2 style="margin-top:0; color:#ff7043;">🔥 리얼 생체 물리 시뮬레이터 v3.1 (모듈 분리판)</h2>
+    
+    <canvas id="simCanvas" width="520" height="240"></canvas>
+
+    <div class="container">
+        <div class="gauge-box">
+            <label>ATP (지구력/체력 코어): <span id="stamina-text" style="color:#4CAF50;">100%</span></label>
+            <div class="bar-container"><div id="stamina-bar" class="bar-fill"></div></div>
+        </div>
+
+        <div class="gauge-box">
+            <label>마찰 각질/분비물 축적도: <span id="debris-text" style="color:#ffeb3b;">0%</span></label>
+            <div class="bar-container"><div id="debris-bar" class="bar-fill"></div></div>
+        </div>
+
+        <div class="gauge-box">
+            <label>유체 역학 게이지 (정액/윤활): <span id="fluid-text" style="color:#00bcd4;">0%</span></label>
+            <div class="bar-container"><div id="fluid-bar" class="bar-fill"></div></div>
+        </div>
+
+        <div class="button-group">
+            <button id="btn-drive">운동성 구동 [스페이스바]</button>
+            <button id="btn-rest">강제 불응기 (휴식)</button>
+        </div>
+
+        <div id="log">[시스템] `character.js` 모듈 참조 성공. 관절 시스템 분리 완료!</div>
+    </div>
+</div>
+
+<!-- ES6 모듈 로드 방식 -->
+<script type="module">
+    import { BioCharacterSystem } from './character.js';
+
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // 외부 모듈 클래스 인스턴스화
+    const charSystem = new BioCharacterSystem(ctx);
+
+    let stamina = 100;
+    let debris = 0;
+    let fluid = 0;
+    let isDriving = false;
+    let isRefractory = false;
+    let restInterval = null;
+    let particles = [];
+
+    const staminaBar = document.getElementById('stamina-bar');
+    const debrisBar = document.getElementById('debris-bar');
+    const fluidBar = document.getElementById('fluid-bar');
+    const staminaText = document.getElementById('stamina-text');
+    const debrisText = document.getElementById('debris-text');
+    const fluidText = document.getElementById('fluid-text');
+    const logBox = document.getElementById('log');
+    const btnDrive = document.getElementById('btn-drive');
+    const btnRest = document.getElementById('btn-rest');
+
+    function addLog(msg) {
+        logBox.innerHTML += `<br>` + msg;
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function updateUI() {
+        staminaBar.style.width = stamina + '%';
+        staminaText.innerText = stamina + '%';
+        staminaText.style.color = stamina < 30 ? '#f44336' : '#4CAF50';
+        staminaBar.style.background = stamina < 30 ? '#f44336' : '#4CAF50';
+
+        debrisBar.style.width = debris + '%';
+        debrisText.innerText = debris + '%';
+
+        fluidBar.style.width = fluid + '%';
+        fluidText.innerText = fluid + '%';
+
+        btnDrive.disabled = isDriving || isRefractory || stamina <= 0;
+        btnRest.disabled = isDriving || isRefractory;
+    }
+
+    function actionDrive() {
+        if (isDriving || isRefractory || stamina <= 0) return;
+
+        isDriving = true;
+        updateUI();
+
+        stamina -= 14;
+        if (stamina < 0) stamina = 0;
+        debris = Math.min(100, debris + 6);
+        fluid = Math.min(100, fluid + 12);
+
+        for (let i = 0; i < 18; i++) {
+            particles.push({
+                x: 218 + (Math.random() - 0.5) * 10,
+                y: 165 + (Math.random() - 0.5) * 10,
+                vx: (Math.random() - 0.5) * 6,
+                vy: (Math.random() - 0.5) * 6 - 2,
+                size: Math.random() * 3 + 2,
+                color: Math.random() > 0.5 ? 'rgba(255, 235, 59, 0.85)' : 'rgba(0, 188, 212, 0.9)',
+                life: 40
+            });
+        }
+
+        if (stamina === 0) {
+            addLog("⚠️ [경고] 멀티 본 관절 과부하! 강제 휴식 진입!");
+            isDriving = false;
+            actionRest();
+            return;
+        }
+
+        addLog("⚙️ [외부 모듈 구동] `character.js` 모듈을 참조하여 관절 애니메이션 실행!");
+        triggerAnimation();
+    }
+
+    function triggerAnimation() {
+        let step = 0;
+        let maxSteps = 8;
+        let interval = setInterval(() => {
+            step++;
+            let progress = Math.sin((step / maxSteps) * Math.PI);
+            
+            // 외부 모듈의 렌더링 함수 호출!
+            charSystem.drawScene(progress, particles);
+
+            if (step >= maxSteps) {
+                clearInterval(interval);
+                isDriving = false;
+                charSystem.drawScene(0, particles);
+                updateUI();
+            }
+        }, 35);
+    }
+
+    function actionRest() {
+        if (isRefractory || isDriving) return;
+
+        isRefractory = true;
+        isDriving = false;
+        updateUI();
+        addLog("💤 [불응기] 쿨다운 진입... 체력 및 인대 회복 중.");
+
+        restInterval = setInterval(() => {
+            stamina = Math.min(100, stamina + 30);
+            updateUI();
+
+            if (stamina >= 100) {
+                clearInterval(restInterval);
+                restInterval = null;
+                isRefractory = false;
+                addLog("✅ [리프레시] 완벽 복구! 다시 구동 가능합니다.");
+                updateUI();
+            }
+        }, 1000);
+    }
+
+    // 이벤트 리스너 바인딩
+    btnDrive.addEventListener('click', actionDrive);
+    btnRest.addEventListener('click', actionRest);
+
+    document.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') {
+            e.preventDefault();
+            actionDrive();
+        }
+    });
+
+    // 초기 실행
+    charSystem.drawScene(0, particles);
+    updateUI();
+</script>
+
+</body>
+</html>
